@@ -1,8 +1,13 @@
+/* Deliberately plain. The design pass is a later phase; this exists so the
+   content is legible and the structure is visible while building. */
+
 :root {
   color-scheme: light dark;
   --bg: #ffffff;
   --fg: #1a1a1a;
-  --muted: #6b7280;
+  --muted: #5c6570;
+  --rule: #e3e6e9;
+  --accent: #2f6f4f;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -10,6 +15,8 @@
     --bg: #111315;
     --fg: #e8e8e8;
     --muted: #9aa1a9;
+    --rule: #2a2e33;
+    --accent: #7fc4a0;
   }
 }
 
@@ -21,21 +28,189 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font: 16px/1.65 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-.placeholder {
-  max-width: 40rem;
+a {
+  color: var(--accent);
+}
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  align-items: baseline;
+  justify-content: space-between;
+  max-width: 46rem;
   margin: 0 auto;
-  padding: 4rem 1.5rem;
+  padding: 2rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--rule);
 }
 
-.placeholder h1 {
-  margin: 0 0 0.5rem;
-  font-size: 2rem;
+.site-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-.meta {
+.site-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-nav a {
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  text-decoration: underline;
+}
+
+.page {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 5rem;
+}
+
+.page.empty {
+  padding-top: 5rem;
+  color: var(--muted);
+}
+
+.block + .block {
+  margin-top: 2.5rem;
+}
+
+.block h2,
+.block h3 {
+  margin: 0 0 0.75rem;
+}
+
+.rich-text p {
+  margin: 0 0 1rem;
+}
+
+.skill-list,
+.timeline-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) auto minmax(6rem, auto);
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.skill-dots {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+}
+
+.dot.on {
+  background: var(--accent);
+}
+
+.skill-label {
   color: var(--muted);
   font-size: 0.875rem;
+  text-align: right;
+}
+
+.timeline-entry {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.timeline-entry .period {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.timeline-entry h4 {
+  margin: 0 0 0.25rem;
+}
+
+.timeline-entry p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.image img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+figure {
+  margin: 0;
+}
+
+figcaption {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.contact-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 32rem;
+}
+
+.contact-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.contact-form input,
+.contact-form textarea {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.contact-form button {
+  justify-self: start;
+  padding: 0.6rem 1.4rem;
+  border: 0;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--bg);
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (max-width: 32rem) {
+  .skill,
+  .timeline-entry {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .skill-label {
+    text-align: left;
+  }
 }

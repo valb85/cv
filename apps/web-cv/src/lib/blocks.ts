@@ -38,5 +38,15 @@ export type BlockDataMap = {
 
 export type BlockData = BlockDataMap[BlockType];
 
+/**
+ * A block row whose `type` and `data` are correlated. The database stores them
+ * as independent columns, so TypeScript cannot narrow one from the other on
+ * the raw row - the query layer asserts this shape once, at the boundary where
+ * untyped JSON becomes typed.
+ */
+export type TypedBlockFields = {
+  [K in BlockType]: { type: K; data: BlockDataMap[K] };
+}[BlockType];
+
 export const isBlockType = (value: string): value is BlockType =>
   (BLOCK_TYPES as readonly string[]).includes(value);
