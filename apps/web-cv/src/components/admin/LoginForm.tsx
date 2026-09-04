@@ -18,7 +18,7 @@ export const LoginForm = () => {
         <input name="password" type="password" required autoComplete="current-password" />
       </label>
       {error ? <p className="error">{error}</p> : null}
-      <button type="submit" disabled={pending}>
+      <button type="submit" className="btn btn-primary" disabled={pending}>
         {pending ? 'Signing in...' : 'Sign in'}
       </button>
     </form>

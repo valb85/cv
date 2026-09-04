@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 
+import { Icon } from '@/components/Icon';
 import { LoginForm } from '@/components/admin/LoginForm';
 import { getCurrentUser } from '@/lib/auth';
 
@@ -14,8 +15,15 @@ export default async function LoginPage() {
 
   return (
     <main className="admin admin-login">
-      <h1>Sign in</h1>
-      <LoginForm />
+      <section className="panel">
+        <div className="panel-head">
+          <span className="panel-icon">
+            <Icon name="user" size={20} />
+          </span>
+          <h2>Sign in</h2>
+        </div>
+        <LoginForm />
+      </section>
     </main>
   );
 }

@@ -1,7 +1,10 @@
-import Link from 'next/link';
 import { asc } from 'drizzle-orm';
+import Link from 'next/link';
 
 import { createPage } from '@/app/admin/actions';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { Panel } from '@/components/admin/Panel';
+import { Icon } from '@/components/Icon';
 import { getDb } from '@/db/client';
 import { pages } from '@/db/schema';
 
@@ -11,45 +14,55 @@ export default function AdminPagesList() {
   const all = getDb().select().from(pages).orderBy(asc(pages.navOrder), asc(pages.id)).all();
 
   return (
-    <main className="admin-main">
-      <h1>Pages</h1>
+    <>
+      <AdminHeader eyebrow="Content" title="Pages" />
 
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Slug</th>
-            <th>Menu</th>
-            <th>Order</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {all.map((page) => (
-            <tr key={page.id}>
-              <td>
-                <Link href={`/admin/pages/${page.id}`}>{page.title}</Link>
-              </td>
-              <td>
-                <code>/{page.slug}</code>
-              </td>
-              <td>{page.inMenu ? (page.navLabel ?? page.title) : '—'}</td>
-              <td>{page.navOrder}</td>
-              <td>{page.published ? 'published' : 'draft'}</td>
+      <Panel icon="file" title="All pages">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Slug</th>
+              <th>Menu</th>
+              <th>Order</th>
+              <th>Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {all.map((page) => (
+              <tr key={page.id}>
+                <td>
+                  <Link href={`/admin/pages/${page.id}`} className="row-title">
+                    <Icon name={page.navIcon ?? undefined} size={17} />
+                    {page.title}
+                  </Link>
+                </td>
+                <td>
+                  <code>/{page.slug}</code>
+                </td>
+                <td>{page.inMenu ? (page.navLabel ?? page.title) : '—'}</td>
+                <td>{page.navOrder}</td>
+                <td>
+                  <span className={page.published ? 'tag live' : 'tag'}>
+                    {page.published ? 'published' : 'draft'}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Panel>
 
-      <section className="panel">
-        <h2>New page</h2>
+      <Panel icon="sparkles" title="New page">
         <form action={createPage} className="row-form">
           <input name="title" placeholder="Title" required />
           <input name="slug" placeholder="slug" required pattern="[A-Za-z0-9\-]+" />
-          <button type="submit">Create</button>
+          <button type="submit" className="btn btn-primary">
+            Create
+          </button>
         </form>
-        <p className="hint">Created as a draft. Publish it from the page editor.</p>
-      </section>
-    </main>
+        <span className="hint">Created as a draft. Publish it from the page editor.</span>
+      </Panel>
+    </>
   );
 }

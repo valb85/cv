@@ -1,71 +1,68 @@
-import { asc, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { addBlock, deleteBlock, deletePage, moveBlock, updateBlock, updatePage } from '@/app/admin/actions';
-import { BlockFields } from '@/components/admin/BlockFields';
+import { deletePage, updatePage } from '@/app/admin/actions';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { CountedTextarea } from '@/components/admin/CountedTextarea';
+import { Panel } from '@/components/admin/Panel';
+import { Toggle } from '@/components/admin/Toggle';
 import { getDb } from '@/db/client';
-import { blocks, pages } from '@/db/schema';
-import { BLOCK_TYPES } from '@/lib/blocks';
+import { pages } from '@/db/schema';
 import { ICON_NAMES } from '@/lib/icons';
-import type { RenderableBlock } from '@/lib/queries';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PageEditor({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
-  const db = getDb();
-  const page = db.select().from(pages).where(eq(pages.id, id)).get();
+  const page = getDb().select().from(pages).where(eq(pages.id, id)).get();
 
   if (!page) {
     notFound();
   }
 
-  const pageBlocks = db
-    .select()
-    .from(blocks)
-    .where(eq(blocks.pageId, page.id))
-    .orderBy(asc(blocks.position), asc(blocks.id))
-    .all() as RenderableBlock[];
-
   return (
-    <main className="admin-main">
-      <h1>{page.title}</h1>
+    <>
+      <AdminHeader eyebrow="Edit Page" title={page.title} />
 
-      <section className="panel">
-        <h2>Page</h2>
-        <form action={updatePage} className="stack">
-          <input type="hidden" name="id" value={page.id} />
+      <form action={updatePage} className="editor-grid">
+        <input type="hidden" name="id" value={page.id} />
+
+        <Panel icon="file" title="Basic Info">
           <label>
             Title
             <input name="title" defaultValue={page.title} required />
           </label>
-          <label>
-            Slug
-            <input name="slug" defaultValue={page.slug} required pattern="[A-Za-z0-9\-]+" />
-          </label>
-          <label>
-            Menu label
-            <input name="navLabel" defaultValue={page.navLabel ?? ''} />
-          </label>
-          <label>
-            Menu icon
-            <select name="navIcon" defaultValue={page.navIcon ?? ''}>
-              <option value="">(none)</option>
-              {ICON_NAMES.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Menu order
-            <input name="navOrder" type="number" defaultValue={page.navOrder} />
-          </label>
-          <label>
-            Meta description
-            <input name="metaDescription" defaultValue={page.metaDescription ?? ''} />
-          </label>
+          <div className="pair">
+            <label>
+              Slug
+              <input name="slug" defaultValue={page.slug} required pattern="[A-Za-z0-9\-]+" />
+            </label>
+            <label>
+              Menu label
+              <input name="navLabel" defaultValue={page.navLabel ?? ''} />
+            </label>
+          </div>
+          <div className="pair">
+            <label>
+              Menu icon
+              <select name="navIcon" defaultValue={page.navIcon ?? ''}>
+                <option value="">(none)</option>
+                {ICON_NAMES.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Menu order
+              <input name="navOrder" type="number" defaultValue={page.navOrder} />
+            </label>
+          </div>
+        </Panel>
+
+        <Panel icon="grid" title="Layout">
           <label>
             Layout columns
             <select name="columns" defaultValue={String(page.columns)}>
@@ -73,81 +70,55 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
               <option value="2">2 — main + side</option>
               <option value="3">3 — three columns</option>
             </select>
+            <span className="hint">Choose the column layout for this page.</span>
           </label>
-          <label className="inline">
-            <input name="inMenu" type="checkbox" defaultChecked={page.inMenu} /> Show in menu
-          </label>
-          <label className="inline">
-            <input name="published" type="checkbox" defaultChecked={page.published} /> Published
-          </label>
-          <button type="submit">Save page</button>
-        </form>
-      </section>
+        </Panel>
 
-      <h2>Blocks</h2>
-      {pageBlocks.map((block, index) => (
-        <section key={block.id} className="panel block-panel">
-          <header className="panel-head">
-            <strong>{block.type}</strong>
-            <span className="panel-actions">
-              <form action={moveBlock}>
-                <input type="hidden" name="id" value={block.id} />
-                <input type="hidden" name="direction" value="up" />
-                <button type="submit" className="linkish" disabled={index === 0}>
-                  ↑
-                </button>
-              </form>
-              <form action={moveBlock}>
-                <input type="hidden" name="id" value={block.id} />
-                <input type="hidden" name="direction" value="down" />
-                <button type="submit" className="linkish" disabled={index === pageBlocks.length - 1}>
-                  ↓
-                </button>
-              </form>
-              <form action={deleteBlock}>
-                <input type="hidden" name="id" value={block.id} />
-                <button type="submit" className="linkish danger">
-                  delete
-                </button>
-              </form>
-            </span>
-          </header>
-          <form action={updateBlock} className="stack">
-            <input type="hidden" name="id" value={block.id} />
-            <input type="hidden" name="type" value={block.type} />
-            {page.columns > 1 ? (
-              <label>
-                Column
-                <select name="column" defaultValue={String(block.column)}>
-                  <option value="0">full width</option>
-                  {Array.from({ length: page.columns }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      column {i + 1}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-            <BlockFields block={block} />
-            <button type="submit">Save block</button>
-          </form>
-        </section>
-      ))}
+        <Panel icon="globe" title="SEO">
+          <label>
+            Meta description
+            <CountedTextarea name="metaDescription" defaultValue={page.metaDescription ?? ''} limit={160} />
+          </label>
+        </Panel>
 
-      <section className="panel">
-        <h2>Add block</h2>
-        <form action={addBlock} className="row-form">
-          <input type="hidden" name="pageId" value={page.id} />
-          <select name="type" defaultValue="rich_text">
-            {BLOCK_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-          <button type="submit">Add</button>
-        </form>
-      </section>
+        <Panel icon="user" title="Visibility">
+          <Toggle
+            name="inMenu"
+            label="Show in menu"
+            hint="Display this page in the navigation menu."
+            defaultChecked={page.inMenu}
+          />
+          <Toggle
+            name="published"
+            label="Published"
+            hint="Make this page visible to your visitors."
+            defaultChecked={page.published}
+          />
+        </Panel>
+
+        <div className="action-bar">
+          <Link className="btn btn-ghost" href={page.slug === 'home' ? '/' : `/${page.slug}`} target="_blank">
+            Preview
+          </Link>
+          <button type="submit" className="btn btn-primary">
+            Save page
+          </button>
+        </div>
+      </form>
+
+      <Panel
+        icon="layers"
+        title="Blocks"
+        action={
+          <Link className="btn btn-ghost" href={`/admin/pages/${page.id}/blocks`}>
+            Manage blocks →
+          </Link>
+        }
+      >
+        <p className="hint">
+          Manage the content blocks for this page. Add, reorder and configure your blocks.
+        </p>
+      </Panel>
 
       <section className="panel danger-zone">
         <form action={deletePage}>
@@ -157,6 +128,6 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
           </button>
         </form>
       </section>
-    </main>
+    </>
   );
 }
