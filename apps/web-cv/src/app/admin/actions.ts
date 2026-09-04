@@ -75,10 +75,12 @@ export const updatePage = async (data: FormData): Promise<void> => {
       slug: str(data, 'slug'),
       title: str(data, 'title'),
       navLabel: str(data, 'navLabel') || null,
+      navIcon: str(data, 'navIcon') || null,
       navOrder: num(data, 'navOrder'),
       inMenu: bool(data, 'inMenu'),
       published: bool(data, 'published'),
       metaDescription: str(data, 'metaDescription') || null,
+      columns: Math.min(3, Math.max(1, num(data, 'columns') || 1)),
       updatedAt: new Date(),
     })
     .where(eq(pages.id, id))
@@ -137,7 +139,7 @@ export const updateBlock = async (data: FormData): Promise<void> => {
 
   getDb()
     .update(blocks)
-    .set({ data: parseBlockForm(type, data), updatedAt: new Date() })
+    .set({ data: parseBlockForm(type, data), column: num(data, 'column'), updatedAt: new Date() })
     .where(eq(blocks.id, id))
     .run();
 

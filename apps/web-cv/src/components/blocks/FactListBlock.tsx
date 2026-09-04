@@ -9,7 +9,11 @@ export const FactListBlock = ({
   tokens: Tokens;
 }) => (
   <section className="block facts">
-    {data.title ? <h3>{data.title}</h3> : null}
+    {data.title ? (
+      <div className="section-head">
+        <h3>{data.title}</h3>
+      </div>
+    ) : null}
     <dl className="fact-list">
       {data.facts.map((fact) => (
         <div key={fact.label} className="fact">

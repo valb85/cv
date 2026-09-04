@@ -15,16 +15,26 @@ export type PageWithBlocks = {
 export type NavEntry = {
   slug: string;
   label: string;
+  icon: string | undefined;
 };
 
 export const getNavEntries = (): NavEntry[] =>
   getDb()
-    .select({ slug: pages.slug, navLabel: pages.navLabel, title: pages.title })
+    .select({
+      slug: pages.slug,
+      navLabel: pages.navLabel,
+      navIcon: pages.navIcon,
+      title: pages.title,
+    })
     .from(pages)
     .where(and(eq(pages.published, true), eq(pages.inMenu, true)))
     .orderBy(asc(pages.navOrder), asc(pages.id))
     .all()
-    .map(({ slug, navLabel, title }) => ({ slug, label: navLabel ?? title }));
+    .map(({ slug, navLabel, navIcon, title }) => ({
+      slug,
+      label: navLabel ?? title,
+      icon: navIcon ?? undefined,
+    }));
 
 export const getPageWithBlocks = (slug: string): PageWithBlocks | null => {
   const db = getDb();

@@ -1,0 +1,1 @@
+ALTER TABLE `pages` ADD `nav_icon` text;

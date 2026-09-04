@@ -49,6 +49,7 @@ export async function POST(request: Request): Promise<Response> {
     return result.error === 'spam' ? respond(request, true) : respond(request, false, result.error);
   }
 
+  const subject = field(data, 'subject').trim();
   const headers = request.headers;
 
   getDb()
@@ -56,7 +57,7 @@ export async function POST(request: Request): Promise<Response> {
     .values({
       name: result.value.name,
       email: result.value.email,
-      body: result.value.body,
+      body: subject ? `[${subject}]\n\n${result.value.body}` : result.value.body,
       ip: headers.get('x-real-ip') ?? headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
       userAgent: headers.get('user-agent'),
     })

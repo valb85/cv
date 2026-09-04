@@ -23,10 +23,13 @@ export const pages = sqliteTable(
     slug: text('slug').notNull().unique(),
     title: text('title').notNull(),
     navLabel: text('nav_label'),
+    navIcon: text('nav_icon'),
     navOrder: integer('nav_order').notNull().default(0),
     inMenu: integer('in_menu', { mode: 'boolean' }).notNull().default(true),
     published: integer('published', { mode: 'boolean' }).notNull().default(false),
     metaDescription: text('meta_description'),
+    /** How many columns the block grid has. 1 means a single flowing column. */
+    columns: integer('columns').notNull().default(1),
     ...timestamps,
   },
   (table) => [index('pages_nav_idx').on(table.inMenu, table.navOrder)],
@@ -41,6 +44,8 @@ export const blocks = sqliteTable(
       .references(() => pages.id, { onDelete: 'cascade' }),
     type: text('type').$type<BlockType>().notNull(),
     position: integer('position').notNull().default(0),
+    /** 0 spans every column; 1..n places the block in that column. */
+    column: integer('column').notNull().default(0),
     data: text('data', { mode: 'json' }).$type<BlockData>().notNull(),
     ...timestamps,
   },

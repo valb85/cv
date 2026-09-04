@@ -1,12 +1,17 @@
 import Image from 'next/image';
 
+import { CardGridBlock } from '@/components/blocks/CardGridBlock';
+import { ContactFormBlock } from '@/components/blocks/ContactFormBlock';
+import { FactListBlock } from '@/components/blocks/FactListBlock';
+import { HeroBlock } from '@/components/blocks/HeroBlock';
+import { InfoListBlock } from '@/components/blocks/InfoListBlock';
+import { PillGroupBlock } from '@/components/blocks/PillGroupBlock';
+import { ProjectGridBlock } from '@/components/blocks/ProjectGridBlock';
+import { QuoteBlock } from '@/components/blocks/QuoteBlock';
+import { SkillListBlock } from '@/components/blocks/SkillListBlock';
+import { TimelineBlock } from '@/components/blocks/TimelineBlock';
 import type { RenderableBlock } from '@/lib/queries';
 import { applyTokens, type Tokens } from '@/lib/tokens';
-
-import { ContactFormBlock } from './ContactFormBlock';
-import { FactListBlock } from './FactListBlock';
-import { SkillListBlock } from './SkillListBlock';
-import { TimelineBlock } from './TimelineBlock';
 
 export const BlockRenderer = ({
   block,
@@ -18,6 +23,9 @@ export const BlockRenderer = ({
   contactSent?: boolean;
 }) => {
   switch (block.type) {
+    case 'hero':
+      return <HeroBlock data={block.data} tokens={tokens} />;
+
     case 'heading':
       return block.data.level === 3 ? (
         <h3 className="block heading">{applyTokens(block.data.text, tokens)}</h3>
@@ -26,8 +34,8 @@ export const BlockRenderer = ({
       );
 
     case 'rich_text':
-      // Authored by the single admin user through the editor, the same trust
-      // model as any CMS. Sanitising happens on write, in the admin phase.
+      // Authored by the single admin user through the editor, and sanitised on
+      // write, so the stored HTML is already an allow-listed subset.
       return (
         <div
           className="block rich-text"
@@ -35,14 +43,29 @@ export const BlockRenderer = ({
         />
       );
 
-    case 'skill_list':
-      return <SkillListBlock data={block.data} />;
+    case 'card_grid':
+      return <CardGridBlock data={block.data} tokens={tokens} />;
+
+    case 'pill_group':
+      return <PillGroupBlock data={block.data} />;
+
+    case 'info_list':
+      return <InfoListBlock data={block.data} tokens={tokens} />;
+
+    case 'project_grid':
+      return <ProjectGridBlock data={block.data} />;
 
     case 'timeline':
       return <TimelineBlock data={block.data} />;
 
+    case 'skill_list':
+      return <SkillListBlock data={block.data} />;
+
     case 'fact_list':
       return <FactListBlock data={block.data} tokens={tokens} />;
+
+    case 'quote':
+      return <QuoteBlock data={block.data} />;
 
     case 'image':
       return (

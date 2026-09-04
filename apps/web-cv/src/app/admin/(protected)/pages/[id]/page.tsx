@@ -6,6 +6,7 @@ import { BlockFields } from '@/components/admin/BlockFields';
 import { getDb } from '@/db/client';
 import { blocks, pages } from '@/db/schema';
 import { BLOCK_TYPES } from '@/lib/blocks';
+import { ICON_NAMES } from '@/lib/icons';
 import type { RenderableBlock } from '@/lib/queries';
 
 export const dynamic = 'force-dynamic';
@@ -47,12 +48,31 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
             <input name="navLabel" defaultValue={page.navLabel ?? ''} />
           </label>
           <label>
+            Menu icon
+            <select name="navIcon" defaultValue={page.navIcon ?? ''}>
+              <option value="">(none)</option>
+              {ICON_NAMES.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
             Menu order
             <input name="navOrder" type="number" defaultValue={page.navOrder} />
           </label>
           <label>
             Meta description
             <input name="metaDescription" defaultValue={page.metaDescription ?? ''} />
+          </label>
+          <label>
+            Layout columns
+            <select name="columns" defaultValue={String(page.columns)}>
+              <option value="1">1 — single column</option>
+              <option value="2">2 — main + side</option>
+              <option value="3">3 — three columns</option>
+            </select>
           </label>
           <label className="inline">
             <input name="inMenu" type="checkbox" defaultChecked={page.inMenu} /> Show in menu
@@ -95,6 +115,19 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
           <form action={updateBlock} className="stack">
             <input type="hidden" name="id" value={block.id} />
             <input type="hidden" name="type" value={block.type} />
+            {page.columns > 1 ? (
+              <label>
+                Column
+                <select name="column" defaultValue={String(block.column)}>
+                  <option value="0">full width</option>
+                  {Array.from({ length: page.columns }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      column {i + 1}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <BlockFields block={block} />
             <button type="submit">Save block</button>
           </form>
