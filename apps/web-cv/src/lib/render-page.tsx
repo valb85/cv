@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { EmptySite } from '@/components/EmptySite';
 import { PageView } from '@/components/PageView';
 import { countPublishedPages, getNavEntries, getPageWithBlocks } from '@/lib/queries';
+import { getSetting } from '@/lib/settings';
+import { buildTokens } from '@/lib/tokens';
 
 export const pageMetadata = (slug: string): Metadata => {
   const content = getPageWithBlocks(slug);
@@ -31,5 +33,12 @@ export const renderSlug = (slug: string) => {
     notFound();
   }
 
-  return <PageView content={content} nav={getNavEntries()} />;
+  return (
+    <PageView
+      content={content}
+      nav={getNavEntries()}
+      tokens={buildTokens()}
+      siteTitle={getSetting('site_title') ?? content.page.title}
+    />
+  );
 };

@@ -8,6 +8,7 @@ export const BLOCK_TYPES = [
   'skill_list',
   'timeline',
   'image',
+  'fact_list',
   'contact_form',
 ] as const;
 
@@ -19,6 +20,11 @@ export type SkillEntry = {
   name: string;
   level: SkillLevel;
   label: string;
+};
+
+export type Fact = {
+  label: string;
+  value: string;
 };
 
 export type TimelineEntry = {
@@ -33,6 +39,7 @@ export type BlockDataMap = {
   skill_list: { title: string; skills: SkillEntry[] };
   timeline: { title: string; entries: TimelineEntry[] };
   image: { src: string; alt: string; caption?: string };
+  fact_list: { title?: string; facts: Fact[] };
   contact_form: { intro?: string };
 };
 

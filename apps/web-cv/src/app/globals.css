@@ -214,3 +214,31 @@ figcaption {
     text-align: left;
   }
 }
+
+.fact-list {
+  margin: 0;
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: 0.5rem 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.fact dt {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.fact dd {
+  margin: 0;
+}
+
+@media (max-width: 32rem) {
+  .fact {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+}
