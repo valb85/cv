@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { addBlock, deleteBlock, moveBlock, updateBlock } from '@/app/admin/actions';
+import { AdminForm } from '@/components/admin/AdminForm';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { BlockFields } from '@/components/admin/BlockFields';
 import { Panel } from '@/components/admin/Panel';
@@ -72,7 +73,7 @@ export default async function BlockEditor({ params }: { params: Promise<{ id: st
             </span>
           </div>
 
-          <form action={updateBlock} className="stack">
+          <AdminForm action={updateBlock} className="stack" submitLabel="Save block">
             <input type="hidden" name="id" value={block.id} />
             <input type="hidden" name="type" value={block.type} />
             {page.columns > 1 ? (
@@ -89,10 +90,7 @@ export default async function BlockEditor({ params }: { params: Promise<{ id: st
               </label>
             ) : null}
             <BlockFields block={block} />
-            <button type="submit" className="btn btn-primary">
-              Save block
-            </button>
-          </form>
+          </AdminForm>
         </section>
       ))}
 

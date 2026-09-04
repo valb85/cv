@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { deletePage, updatePage } from '@/app/admin/actions';
+import { AdminForm } from '@/components/admin/AdminForm';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { CountedTextarea } from '@/components/admin/CountedTextarea';
 import { Panel } from '@/components/admin/Panel';
@@ -25,7 +26,20 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
     <>
       <AdminHeader eyebrow="Edit Page" title={page.title} />
 
-      <form action={updatePage} className="editor-grid">
+      <AdminForm
+        action={updatePage}
+        className="editor-grid"
+        submitLabel="Save page"
+        extra={
+          <Link
+            className="btn btn-ghost"
+            href={page.slug === 'home' ? '/' : `/${page.slug}`}
+            target="_blank"
+          >
+            Preview
+          </Link>
+        }
+      >
         <input type="hidden" name="id" value={page.id} />
 
         <Panel icon="file" title="Basic Info">
@@ -96,15 +110,7 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
           />
         </Panel>
 
-        <div className="action-bar">
-          <Link className="btn btn-ghost" href={page.slug === 'home' ? '/' : `/${page.slug}`} target="_blank">
-            Preview
-          </Link>
-          <button type="submit" className="btn btn-primary">
-            Save page
-          </button>
-        </div>
-      </form>
+      </AdminForm>
 
       <Panel
         icon="layers"

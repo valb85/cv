@@ -64,7 +64,7 @@ export const createPage = async (data: FormData): Promise<void> => {
   redirect(`/admin/pages/${created.id}`);
 };
 
-export const updatePage = async (data: FormData): Promise<void> => {
+export const updatePage = async (_: string | null, data: FormData): Promise<string> => {
   await requireUser();
 
   const id = num(data, 'id');
@@ -87,6 +87,8 @@ export const updatePage = async (data: FormData): Promise<void> => {
     .run();
 
   revalidatePath('/', 'layout');
+
+  return 'Page saved.';
 };
 
 export const deletePage = async (data: FormData): Promise<void> => {
@@ -127,15 +129,21 @@ export const addBlock = async (data: FormData): Promise<void> => {
   revalidatePath('/', 'layout');
 };
 
-export const updateBlock = async (data: FormData): Promise<void> => {
+export const updateBlock = async (_: string | null, data: FormData): Promise<string> => {
   await requireUser();
 
   const id = num(data, 'id');
-  const type = str(data, 'type');
 
-  if (!isBlockType(type)) {
-    return;
+  // The stored type decides how the form is parsed. Trusting the submitted
+  // `type` lets a stale or mismatched form write the wrong shape into a block,
+  // which then breaks its editor on the next render.
+  const existing = getDb().select({ type: blocks.type }).from(blocks).where(eq(blocks.id, id)).get();
+
+  if (!existing || !isBlockType(existing.type)) {
+    return 'Block not found; nothing saved.';
   }
+
+  const type = existing.type;
 
   getDb()
     .update(blocks)
@@ -144,6 +152,8 @@ export const updateBlock = async (data: FormData): Promise<void> => {
     .run();
 
   revalidatePath('/', 'layout');
+
+  return 'Block saved.';
 };
 
 export const deleteBlock = async (data: FormData): Promise<void> => {
@@ -190,7 +200,7 @@ export const moveBlock = async (data: FormData): Promise<void> => {
   revalidatePath('/', 'layout');
 };
 
-export const updateSettings = async (data: FormData): Promise<void> => {
+export const updateSettings = async (_: string | null, data: FormData): Promise<string> => {
   await requireUser();
 
   for (const [key, value] of data.entries()) {
@@ -206,6 +216,8 @@ export const updateSettings = async (data: FormData): Promise<void> => {
   }
 
   revalidatePath('/', 'layout');
+
+  return 'Settings saved.';
 };
 
 export const markMessageRead = async (data: FormData): Promise<void> => {

@@ -1,4 +1,5 @@
 import { updateSettings } from '@/app/admin/actions';
+import { AdminForm } from '@/components/admin/AdminForm';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Panel } from '@/components/admin/Panel';
 import { getAllSettings } from '@/lib/settings';
@@ -40,7 +41,7 @@ export default function SettingsPage() {
     <>
       <AdminHeader eyebrow="Configuration" title="Settings" />
 
-      <form action={updateSettings} className="editor-grid">
+      <AdminForm action={updateSettings} className="editor-grid" submitLabel="Save settings">
         {GROUPS.map((group) => (
           <Panel key={group.title} icon={group.icon} title={group.title}>
             {group.fields.map((field) => (
@@ -53,12 +54,7 @@ export default function SettingsPage() {
           </Panel>
         ))}
 
-        <div className="action-bar">
-          <button type="submit" className="btn btn-primary">
-            Save settings
-          </button>
-        </div>
-      </form>
+      </AdminForm>
     </>
   );
 }
