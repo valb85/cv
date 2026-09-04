@@ -52,7 +52,8 @@ RUN sed -i \
     'ProxyPass / http://cv:3000/ retry=0' \
     'ProxyPassReverse / http://cv:3000/' \
     '' \
-    'RequestHeader set X-Forwarded-Proto expr=%{REQUEST_SCHEME}' \
+    '# setifempty, not set: preserve the value from an upstream proxy (Caddy)' \
+    'RequestHeader setifempty X-Forwarded-Proto expr=%{REQUEST_SCHEME}' \
     '' \
     'ErrorDocument 502 /50x.html' \
     'ErrorDocument 503 /50x.html' \

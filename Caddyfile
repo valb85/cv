@@ -1,0 +1,38 @@
+# Local HTTPS for development: https://cv.local -> the apache container on 12100.
+#
+# Differs from deco-pvc's Caddyfile in two ways, both because that one was
+# written on a Mac: it uses `tls internal` rather than mkcert files (mkcert is
+# not installed here and ~/.config/ssl-certificates is empty), and it carries
+# no shebang (deco-pvc's points at /usr/local/bin/caddy; on this box the
+# binary is /usr/bin/caddy).
+#
+# Caddy already runs here as a system service owning :80, and it cannot read
+# this file - /home/whyty is drwxr-x--- and caddy runs as user `caddy`. So the
+# block below is copied into the system config rather than imported:
+#
+#   1. Point the domain at loopback:
+#        echo '127.0.0.1  cv.local' | sudo tee -a /etc/hosts
+#
+#   2. Append this site block to the system config:
+#        sudo sh -c 'cat /home/whyty/dev-projects/projects/cv_local/Caddyfile >> /etc/caddy/Caddyfile'
+#
+#   3. Reload, and trust Caddy's local CA so the browser stops warning:
+#        sudo systemctl reload caddy
+#        sudo caddy trust
+#
+# Validated: this coexists with the stock `:80` block already in
+# /etc/caddy/Caddyfile - srv0 takes :443 for cv.local, srv1 keeps :80.
+
+cv.local {
+	tls internal
+
+	reverse_proxy localhost:12100 {
+		header_up Host               "cv.local"
+		header_up X-Real-IP          {remote}
+		header_up X-Forwarded-Host   "cv.local"
+		header_up X-Forwarded-Server "cv.local"
+		header_up X-Forwarded-Port   {port}
+		header_up X-Forwarded-For    {remote}
+		header_up X-Forwarded-Proto  {scheme}
+	}
+}

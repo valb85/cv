@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
 import { getDb } from '@/db/client';
 import { users } from '@/db/schema';
@@ -13,13 +13,21 @@ import {
 
 export type SessionUser = { id: number; email: string };
 
+/**
+ * Driven by the actual request scheme, not BASE_URL. The site is reachable
+ * both over https through Caddy and over plain http on the container port; a
+ * cookie marked secure from an http request would simply never come back.
+ */
+const isSecureRequest = async (): Promise<boolean> =>
+  (await headers()).get('x-forwarded-proto') === 'https';
+
 export const setSessionCookie = async (userId: number): Promise<void> => {
   const store = await cookies();
 
   store.set(SESSION_COOKIE, createSessionToken(userId), {
     httpOnly: true,
     sameSite: 'lax',
-    secure: (process.env.BASE_URL ?? '').startsWith('https://'),
+    secure: await isSecureRequest(),
     path: '/',
     maxAge: SESSION_TTL_SECONDS,
   });
