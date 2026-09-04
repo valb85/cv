@@ -24,7 +24,6 @@ dco logs -f cv
 |---|---|
 | Site | https://cv.localhost (or http://localhost:12100) |
 | Admin | https://cv.localhost/admin |
-| Mailhog | http://localhost:12125 |
 
 Credentials come from `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `.env`; the account is
 created on first boot and never overwritten afterwards.
@@ -50,7 +49,6 @@ sudo update-ca-certificates
 | `apache` | Serves `/uploads` and error pages, proxies the rest to Next | 12100 |
 | `cv` | The Next.js app | — |
 | `cv-base` | Build-only: tags the base image `cv`'s Dockerfile builds `FROM` | — |
-| `mailhog` | Catches contact-form mail in dev | 12125 |
 
 ## Layout
 
@@ -58,12 +56,21 @@ sudo update-ca-certificates
 apps/web-cv/          Next.js app
   src/app/            routes: /, /[slug], /admin/*, /api/*
   src/db/             schema, client, migrations, seed
-  src/lib/            auth, blocks, mail, sanitize, tokens
+  src/lib/            auth, blocks, contact, sanitize, tokens
   drizzle/            generated migration SQL
 apps/web-apache/      reverse proxy container
 deploy/               host Apache vhost for production
 Caddyfile             local HTTPS
 ```
+
+## Contact form
+
+Submissions are stored in the `messages` table and read in the admin inbox at
+`/admin/messages`, where they can be marked read or deleted. **Nothing is sent
+by e-mail** — there is no SMTP configuration and no relay to keep working, so
+the only place a message can go missing is if it is deleted on purpose.
+
+Check the inbox; nothing will notify you.
 
 ## Content model
 
@@ -104,8 +111,7 @@ Edit `.env` — set `APP_DOMAIN`, and fill in the blanks:
 openssl rand -hex 32        # SESSION_SECRET
 ```
 
-`ADMIN_PASSWORD`, and `SMTP_*` for a real relay. Container `mail()` does not
-reach Gmail; use SES, SendGrid, or your mail host.
+and `ADMIN_PASSWORD`.
 
 ```bash
 dco up -d --build

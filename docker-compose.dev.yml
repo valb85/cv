@@ -69,14 +69,3 @@ services:
         - "${IMAGE_CV_BASE}"
     command: tail -f /dev/null
 
-  mailhog:
-    image: mailhog/mailhog
-    restart: unless-stopped
-    logging:
-      driver: 'none'
-    environment:
-      TZ: "Europe/Bucharest"
-    ports:
-      # 12125, not 8025 or 8125: 8025 is deco-pvc's mailhog and 8125 is the
-      # registered StatsD port. Grouped with the 12100 apache port instead.
-      - "12125:8025"

@@ -1,9 +1,6 @@
-import { eq } from 'drizzle-orm';
-
 import { getDb } from '@/db/client';
 import { messages } from '@/db/schema';
 import { validateContact } from '@/lib/contact';
-import { sendContactMail } from '@/lib/mail';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +23,11 @@ const respond = (request: Request, ok: boolean, error?: string): Response => {
   return Response.redirect(target, 303);
 };
 
+/**
+ * Submissions are stored and read in the admin inbox only - nothing is
+ * relayed by e-mail. There is no delivery step to fail, so a stored row is
+ * the whole success condition.
+ */
 export async function POST(request: Request): Promise<Response> {
   let data: FormData;
 
@@ -44,16 +46,12 @@ export async function POST(request: Request): Promise<Response> {
 
   if (!result.ok) {
     // A honeypot hit is reported as success so the sender does not retry.
-    return result.error === 'spam'
-      ? respond(request, true)
-      : respond(request, false, result.error);
+    return result.error === 'spam' ? respond(request, true) : respond(request, false, result.error);
   }
 
   const headers = request.headers;
 
-  // Stored first, delivered second. If the relay is down the submission is
-  // still in the inbox - send.php simply lost it.
-  const stored = getDb()
+  getDb()
     .insert(messages)
     .values({
       name: result.value.name,
@@ -62,25 +60,7 @@ export async function POST(request: Request): Promise<Response> {
       ip: headers.get('x-real-ip') ?? headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
       userAgent: headers.get('user-agent'),
     })
-    .returning({ id: messages.id })
-    .get();
-
-  try {
-    await sendContactMail(result.value);
-    getDb()
-      .update(messages)
-      .set({ deliveredAt: new Date() })
-      .where(eq(messages.id, stored.id))
-      .run();
-  } catch (cause) {
-    const reason = cause instanceof Error ? cause.message : String(cause);
-
-    getDb().update(messages).set({ deliveryError: reason }).where(eq(messages.id, stored.id)).run();
-    console.error(`[contact] message ${stored.id} stored but not delivered: ${reason}`);
-
-    // The visitor's message is safe, so this is still a success for them.
-    return respond(request, true);
-  }
+    .run();
 
   return respond(request, true);
 }

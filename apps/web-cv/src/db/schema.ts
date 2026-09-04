@@ -56,8 +56,8 @@ export const settings = sqliteTable('settings', {
 });
 
 /**
- * Submissions are stored before the email is attempted, so a broken SMTP relay
- * loses nothing - the old send.php dropped them silently.
+ * Contact submissions. Read in the admin inbox; nothing is relayed by e-mail,
+ * so there is no delivery state to track.
  */
 export const messages = sqliteTable(
   'messages',
@@ -68,8 +68,6 @@ export const messages = sqliteTable(
     body: text('body').notNull(),
     ip: text('ip'),
     userAgent: text('user_agent'),
-    deliveredAt: integer('delivered_at', { mode: 'timestamp' }),
-    deliveryError: text('delivery_error'),
     readAt: integer('read_at', { mode: 'timestamp' }),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()

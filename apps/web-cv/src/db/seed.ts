@@ -24,6 +24,8 @@ const SETTINGS: Record<string, string> = {
   site_title: 'Victor Albulescu',
   tagline: 'Web developer in Timisoara, Romania. Back end, ERP systems, and the occasional cat photo.',
   avatar: '/images/me.jpg',
+  // Drives the {{age}} token. Deliberately not shown as a fact on the home
+  // page - the age is the useful part, the date of birth is not.
   birth_date: '1985-08-04',
   contact_email: 'albulescu.victor.alexandru@gmail.com',
   social_facebook: 'https://www.facebook.com/albulescu.victor.alexandru',
@@ -45,7 +47,6 @@ const SEED_PAGES: SeedPage[] = [
         data: {
           facts: [
             { label: 'Age', value: '{{age}} years' },
-            { label: 'Date of birth', value: '04-08-1985' },
             { label: 'Address', value: 'Timisoara, Romania' },
             { label: 'E-mail', value: 'albulescu.victor.alexandru@gmail.com' },
           ],

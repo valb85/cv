@@ -46,9 +46,6 @@ export default function MessagesPage() {
             </span>
           </header>
           <p className="message-body">{message.body}</p>
-          {message.deliveryError ? (
-            <p className="error">Mail delivery failed: {message.deliveryError}</p>
-          ) : null}
         </section>
       ))}
     </main>
