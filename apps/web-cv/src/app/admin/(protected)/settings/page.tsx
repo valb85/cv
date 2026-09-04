@@ -5,10 +5,13 @@ export const dynamic = 'force-dynamic';
 
 const FIELDS: { key: string; label: string; hint?: string }[] = [
   { key: 'site_title', label: 'Site title' },
+  { key: 'tagline', label: 'Tagline', hint: 'One line under your name in the sidebar.' },
+  { key: 'avatar', label: 'Avatar image', hint: 'Path under /images. Blank hides it.' },
   { key: 'birth_date', label: 'Date of birth', hint: 'YYYY-MM-DD. Drives the {{age}} token.' },
   { key: 'contact_email', label: 'Contact e-mail' },
   { key: 'social_facebook', label: 'Facebook URL' },
   { key: 'social_linkedin', label: 'LinkedIn URL' },
+  { key: 'social_github', label: 'GitHub URL' },
 ];
 
 export default function SettingsPage() {

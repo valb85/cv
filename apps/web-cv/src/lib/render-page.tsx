@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { EmptySite } from '@/components/EmptySite';
 import { PageView } from '@/components/PageView';
 import { countPublishedPages, getNavEntries, getPageWithBlocks } from '@/lib/queries';
-import { getSetting } from '@/lib/settings';
+import { getAllSettings } from '@/lib/settings';
 import { buildTokens } from '@/lib/tokens';
 
 export const pageMetadata = (slug: string): Metadata => {
@@ -14,8 +14,10 @@ export const pageMetadata = (slug: string): Metadata => {
     return {};
   }
 
+  const siteTitle = getAllSettings().site_title;
+
   return {
-    title: content.page.title,
+    title: slug === 'home' && siteTitle ? siteTitle : content.page.title,
     description: content.page.metaDescription ?? undefined,
   };
 };
@@ -38,7 +40,7 @@ export const renderSlug = (slug: string, contactSent = false) => {
       content={content}
       nav={getNavEntries()}
       tokens={buildTokens()}
-      siteTitle={getSetting('site_title') ?? content.page.title}
+      settings={getAllSettings()}
       contactSent={contactSent}
     />
   );

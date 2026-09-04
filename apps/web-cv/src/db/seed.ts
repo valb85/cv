@@ -22,10 +22,13 @@ type SeedPage = {
 
 const SETTINGS: Record<string, string> = {
   site_title: 'Victor Albulescu',
+  tagline: 'Web developer in Timisoara, Romania. Back end, ERP systems, and the occasional cat photo.',
+  avatar: '/images/me.jpg',
   birth_date: '1985-08-04',
   contact_email: 'albulescu.victor.alexandru@gmail.com',
   social_facebook: 'https://www.facebook.com/albulescu.victor.alexandru',
   social_linkedin: 'https://www.linkedin.com/in/victor-alexandru-albulescu-153a7155/',
+  social_github: '',
 };
 
 const SEED_PAGES: SeedPage[] = [

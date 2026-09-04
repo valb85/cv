@@ -1,0 +1,192 @@
+/* Admin-only styles, imported by the admin layouts so public pages never
+   download them. */
+
+.admin {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 5rem;
+}
+
+.admin-login {
+  max-width: 22rem;
+  padding-top: 4rem;
+}
+
+.admin-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.admin-bar nav {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.admin-bar form {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.who {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.admin-main {
+  padding-top: 1.5rem;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  font-size: 0.925rem;
+}
+
+.admin-table th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.panel {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.panel.unread {
+  border-left: 3px solid var(--accent);
+}
+
+.panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.stack > label,
+.rows label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+label.inline {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.row-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.rows {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.rows .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.rows .row > * {
+  flex: 1 1 8rem;
+}
+
+.admin input,
+.admin textarea,
+.admin select {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.admin button {
+  padding: 0.45rem 1rem;
+  border: 0;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--bg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.admin button.linkish {
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.admin .danger,
+.admin button.danger {
+  background: none;
+  color: #c0392b;
+}
+
+.danger-zone {
+  border-color: #c0392b40;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.error {
+  color: #c0392b;
+  font-size: 0.9rem;
+}
+
+.message-body {
+  margin: 0;
+  white-space: pre-wrap;
+}

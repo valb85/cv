@@ -5,6 +5,8 @@ volumes:
     name: "${COMPOSE_PROJECT_NAME}-uploads-data"
   node-modules-data:
     name: "${COMPOSE_PROJECT_NAME}-node-modules-data"
+  next-cache-data:
+    name: "${COMPOSE_PROJECT_NAME}-next-cache-data"
   caddy-data:
     name: "${COMPOSE_PROJECT_NAME}-caddy-data"
   caddy-config:
@@ -49,6 +51,10 @@ services:
     volumes:
       - ./apps/web-cv:/srv:delegated
       - node-modules-data:/srv/node_modules
+      # Keeps .next out of the bind mount. Docker Desktop remaps container
+      # root to host uid 100999, so build output written through the mount
+      # lands unwritable by the user who owns the source.
+      - next-cache-data:/srv/.next
       - db-data:/srv/data
       - uploads-data:/srv/uploads
     depends_on:

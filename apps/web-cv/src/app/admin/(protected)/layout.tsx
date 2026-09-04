@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 import { logout } from '@/app/admin/actions';
 import { getCurrentUser } from '@/lib/auth';
 
+import '../admin.css';
+
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
