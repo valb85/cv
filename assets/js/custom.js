@@ -519,11 +519,21 @@ $(function () {
 
     }
 
+    /* Date of birth: 04-08-1985, kept in sync with .more_info in index.html.
+       Note the month is 0-indexed, so 7 is August. */
+    var birthDate = new Date(1985, 7, 4);
+
     function calculateAge() {
-      var today = new Date(),
-          currentYear = today.getFullYear(),
-          myAge = currentYear - 1985;
-          return myAge;
+        var today = new Date(),
+            age = today.getFullYear() - birthDate.getFullYear(),
+            monthDiff = today.getMonth() - birthDate.getMonth();
+
+        // Not had this year's birthday yet
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        return age;
     }
     $(".my-age").text(calculateAge());
 });

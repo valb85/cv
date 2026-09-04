@@ -9,13 +9,13 @@ $errorMessage = 'Sorry your message can not be sent.';
 if(empty($name)||empty($email)||empty($message))
 {
     echo "Name and email and message are required !";
-    header('Location: index.html');
+    exit;
 }
 //validate against any email injection attempts
 if(IsInjected($email))
 {
     echo "Bad email value!";
-    header('Location: index.html');
+    exit;
 }
 
 
