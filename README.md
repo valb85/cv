@@ -154,7 +154,7 @@ Ubuntu 22.04 ships Node 12, which is far too old — `next` needs ≥20.9 and
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
-sudo apt install -y nodejs build-essential python3
+sudo apt install -y nodejs build-essential python3 sqlite3
 sudo npm i -g pnpm
 sudo useradd --system --home /srv/cv --shell /usr/sbin/nologin cv
 ```
@@ -219,18 +219,41 @@ Migrations and the admin account are applied on boot by
 The standalone build does not contain the seed script. Either create pages
 through the admin, or copy a database up:
 
+The database is not in the repo: it lives in the `cv-db-data` Docker volume,
+mounted at `/srv/data/cv.db` inside the container. `apps/web-cv/data/` is an
+empty placeholder the volume mounts over. So it has to be exported, not copied.
+
 ```bash
 # on the dev machine — the db runs in WAL mode, so copying the .db file
-# alone can lose recent writes
+# alone can lose recent writes. VACUUM INTO folds the WAL in.
 dco exec cv node -e "new (require('better-sqlite3'))(process.env.DATABASE_PATH).exec(\"VACUUM INTO '/srv/data/out.db'\")"
-dco cp cv:/srv/data/out.db ./cv.db
-
-# on the server
-sudo systemctl stop cv
-sudo -u cv cp cv.db /var/lib/cv/cv.db
-sudo -u cv rm -f /var/lib/cv/cv.db-wal /var/lib/cv/cv.db-shm
-sudo systemctl start cv
+dco cp cv:/srv/data/out.db ./cv.db          # now a real file in the repo root
+scp ./cv.db YOUR_USER@YOUR-DOMAIN:/tmp/cv.db
 ```
+
+```bash
+# on the server
+ls -la /tmp/cv.db
+sudo systemctl stop cv
+
+sudo cp /tmp/cv.db /var/lib/cv/cv.db
+sudo chown cv:cv /var/lib/cv/cv.db
+sudo rm -f /var/lib/cv/cv.db-wal /var/lib/cv/cv.db-shm
+
+# else production inherits the development password and ADMIN_PASSWORD is ignored
+sudo -u cv sqlite3 /var/lib/cv/cv.db 'DELETE FROM users;'
+
+sudo systemctl start cv
+journalctl -u cv -n 20 --no-pager | grep '\[auth\]'   # created admin user …
+```
+
+Copy as root and `chown` after, rather than `sudo -u cv cp`: the shell expands
+the source path as *you*, and home directories are usually `750`, so the `cv`
+user cannot read it. The stale `-wal`/`-shm` belong to the replaced database
+and must go with it.
+
+Delete both copies afterwards — they hold the admin password hash and every
+contact message.
 
 ### Backups
 

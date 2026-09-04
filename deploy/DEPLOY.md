@@ -24,12 +24,16 @@ so `build.sh` refuses to run below 22.
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
-sudo apt install -y nodejs build-essential python3
+sudo apt install -y nodejs build-essential python3 sqlite3
 sudo npm i -g pnpm
 ```
 
 `build-essential` and `python3` are not optional: `better-sqlite3` is a native
 module and needs a compiler when no prebuild matches the server's Node ABI.
+`sqlite3` is the CLI, needed for backups and for the account reset in step 6.
+Do not reach for the app's own copy of `better-sqlite3` instead - pnpm nests it
+under `node_modules/.pnpm/better-sqlite3@<version>/`, so a plain `require` from
+`/srv/cv` does not resolve, and the path that does changes on every bump.
 
 The service account, which owns the app and its data:
 
