@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { logout } from '@/app/admin/actions';
 import { getCurrentUser } from '@/lib/auth';
+import { countUnreadMessages } from '@/lib/queries';
 
 import '../admin.css';
 
@@ -16,13 +17,22 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     redirect('/admin/login');
   }
 
+  const unread = countUnreadMessages();
+
   return (
     <div className="admin">
       <header className="admin-bar">
         <nav>
           <Link href="/admin">Pages</Link>
           <Link href="/admin/settings">Settings</Link>
-          <Link href="/admin/messages">Messages</Link>
+          <Link href="/admin/messages">
+            Messages
+            {unread > 0 ? (
+              <span className="badge" aria-label={`${unread} unread`}>
+                {unread}
+              </span>
+            ) : null}
+          </Link>
           <Link href="/">View site</Link>
         </nav>
         <form action={logout}>

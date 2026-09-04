@@ -190,3 +190,26 @@ label.inline {
   margin: 0;
   white-space: pre-wrap;
 }
+
+/* Unread indicator beside the Messages link. Hidden entirely at zero - a
+   badge showing 0 is noise, not information. */
+.admin-bar nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}

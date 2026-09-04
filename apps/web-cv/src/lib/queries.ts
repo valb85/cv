@@ -1,8 +1,8 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 
 import { getDb } from '@/db/client';
 import type { Block, Page } from '@/db/schema';
-import { blocks, pages } from '@/db/schema';
+import { blocks, messages, pages } from '@/db/schema';
 import type { TypedBlockFields } from '@/lib/blocks';
 
 export type RenderableBlock = Omit<Block, 'type' | 'data'> & TypedBlockFields;
@@ -56,4 +56,11 @@ export const countPublishedPages = (): number =>
     .select({ count: sql<number>`count(*)` })
     .from(pages)
     .where(eq(pages.published, true))
+    .get()?.count ?? 0;
+
+export const countUnreadMessages = (): number =>
+  getDb()
+    .select({ count: sql<number>`count(*)` })
+    .from(messages)
+    .where(isNull(messages.readAt))
     .get()?.count ?? 0;
