@@ -15,17 +15,21 @@ const env = process.env as Record<string, string | undefined>;
 
 export const INTERNAL_ADMIN_PATH = '/admin';
 
-// One segment, three characters or more. Deliberately narrow: the path ends up
-// in a rewrite target, so anything with a slash or a dot in it is a mistake.
-const SEGMENT = /^\/[a-z0-9][a-z0-9_-]{2,63}$/i;
+// One segment, three characters or more. Deliberately narrow: the value ends up
+// as a rewrite target, so an interior slash or a dot in it is a mistake.
+const SEGMENT = /^[a-z0-9][a-z0-9_-]{2,63}$/i;
 
 /**
- * Throws on a configured-but-malformed value. Silently serving `/admin`
- * because of a typo in the env file is the one outcome worth an exception -
- * the caller in middleware catches it and takes the admin offline instead.
+ * Surrounding slashes are optional and stripped - `console-x7f3` and
+ * `/console-x7f3/` mean the same thing. Requiring the leading one only bought
+ * a way to take the admin offline with a typo.
+ *
+ * Still throws on a genuinely malformed value. Silently serving `/admin`
+ * because of a mistake in the env file is the one outcome worth an exception;
+ * the caller in the proxy catches it and takes the admin offline instead.
  */
 export const adminBasePath = (): string => {
-  const configured = env.ADMIN_PATH?.trim().replace(/\/+$/, '');
+  const configured = env.ADMIN_PATH?.trim().replace(/^\/+|\/+$/g, '');
 
   if (!configured) {
     return INTERNAL_ADMIN_PATH;
@@ -33,11 +37,11 @@ export const adminBasePath = (): string => {
 
   if (!SEGMENT.test(configured)) {
     throw new Error(
-      `ADMIN_PATH must be a single path segment such as /a7f3c1-console; got ${JSON.stringify(configured)}.`,
+      `ADMIN_PATH must be a single path segment such as a7f3c1-console; got ${JSON.stringify(env.ADMIN_PATH)}.`,
     );
   }
 
-  return configured;
+  return `/${configured}`;
 };
 
 export const adminPath = (suffix = ''): string => `${adminBasePath()}${suffix}`;
