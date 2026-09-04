@@ -18,6 +18,9 @@ COPY --from=intermediate /srv/.next/standalone/ /srv/
 COPY --from=intermediate /srv/.next/static/ /srv/.next/static/
 COPY --from=intermediate /srv/public/ /srv/public/
 
+# Migration SQL is read from disk at runtime, so the tracer never sees it.
+COPY --from=intermediate /srv/drizzle/ /srv/drizzle/
+
 RUN sed -i 's|command=|command=node /srv/server.js|' /etc/supervisor/conf.d/cv.conf
 
 FROM $IMAGE_CV_BASE AS development
