@@ -2,32 +2,56 @@
 
 import { and, eq, gt, lt, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { getDb } from '@/db/client';
 import { blocks, messages, pages, settings } from '@/db/schema';
+import { adminPath } from '@/lib/admin-path';
 import { authenticate, clearSessionCookie, requireUser, setSessionCookie } from '@/lib/auth';
 import { isBlockType, type BlockType } from '@/lib/blocks';
 import { defaultBlockData, parseBlockForm } from '@/lib/block-forms';
+import { clearLoginAttempts, loginLockout, recordFailedLogin } from '@/lib/login-throttle';
 
 const str = (data: FormData, key: string): string => String(data.get(key) ?? '').trim();
 const num = (data: FormData, key: string): number => Number(data.get(key) ?? 0) || 0;
 const bool = (data: FormData, key: string): boolean => data.get(key) === 'on';
 
+// Apache adds X-Forwarded-For on the way through, so this is the real client
+// rather than 127.0.0.1 for every single request.
+const clientKey = async (): Promise<string> => {
+  const list = await headers();
+  const forwarded = list.get('x-forwarded-for')?.split(',')[0]?.trim();
+
+  return forwarded || list.get('x-real-ip') || 'unknown';
+};
+
 export const login = async (_: string | null, data: FormData): Promise<string | null> => {
+  const key = await clientKey();
+  const lockedFor = loginLockout(key);
+
+  // Checked before the password is looked at, so a locked-out caller learns
+  // nothing from how long the answer takes.
+  if (lockedFor > 0) {
+    return `Too many attempts. Try again in ${Math.ceil(lockedFor / 60)} minutes.`;
+  }
+
   const userId = authenticate(str(data, 'email'), String(data.get('password') ?? ''));
 
   if (!userId) {
+    recordFailedLogin(key);
+
     return 'Wrong e-mail or password.';
   }
 
+  clearLoginAttempts(key);
   await setSessionCookie(userId);
-  redirect('/admin');
+  redirect(adminPath());
 };
 
 export const logout = async (): Promise<void> => {
   await clearSessionCookie();
-  redirect('/admin/login');
+  redirect(adminPath('/login'));
 };
 
 export const createPage = async (data: FormData): Promise<void> => {
@@ -61,7 +85,7 @@ export const createPage = async (data: FormData): Promise<void> => {
     .get();
 
   revalidatePath('/', 'layout');
-  redirect(`/admin/pages/${created.id}`);
+  redirect(adminPath(`/pages/${created.id}`));
 };
 
 export const updatePage = async (_: string | null, data: FormData): Promise<string> => {
@@ -97,7 +121,7 @@ export const deletePage = async (data: FormData): Promise<void> => {
   getDb().delete(pages).where(eq(pages.id, num(data, 'id'))).run();
 
   revalidatePath('/', 'layout');
-  redirect('/admin');
+  redirect(adminPath());
 };
 
 export const addBlock = async (data: FormData): Promise<void> => {
@@ -229,7 +253,7 @@ export const markMessageRead = async (data: FormData): Promise<void> => {
     .where(eq(messages.id, num(data, 'id')))
     .run();
 
-  revalidatePath('/admin/messages');
+  revalidatePath(adminPath('/messages'));
 };
 
 export const deleteMessage = async (data: FormData): Promise<void> => {
@@ -237,5 +261,5 @@ export const deleteMessage = async (data: FormData): Promise<void> => {
 
   getDb().delete(messages).where(eq(messages.id, num(data, 'id'))).run();
 
-  revalidatePath('/admin/messages');
+  revalidatePath(adminPath('/messages'));
 };

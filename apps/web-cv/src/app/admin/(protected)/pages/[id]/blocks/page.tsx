@@ -9,6 +9,7 @@ import { BlockFields } from '@/components/admin/BlockFields';
 import { Panel } from '@/components/admin/Panel';
 import { getDb } from '@/db/client';
 import { blocks, pages } from '@/db/schema';
+import { adminPath } from '@/lib/admin-path';
 import { BLOCK_TYPES } from '@/lib/blocks';
 import type { RenderableBlock } from '@/lib/queries';
 
@@ -35,7 +36,7 @@ export default async function BlockEditor({ params }: { params: Promise<{ id: st
       <AdminHeader eyebrow={`Blocks — ${page.title}`} title="Manage blocks" />
 
       <p className="back-link">
-        <Link href={`/admin/pages/${page.id}`}>← Back to page settings</Link>
+        <Link href={adminPath(`/pages/${page.id}`)}>← Back to page settings</Link>
       </p>
 
       {pageBlocks.map((block, index) => (

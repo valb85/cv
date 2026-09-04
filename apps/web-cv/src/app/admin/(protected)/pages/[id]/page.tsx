@@ -10,6 +10,7 @@ import { Panel } from '@/components/admin/Panel';
 import { Toggle } from '@/components/admin/Toggle';
 import { getDb } from '@/db/client';
 import { pages } from '@/db/schema';
+import { adminPath } from '@/lib/admin-path';
 import { ICON_NAMES } from '@/lib/icons';
 
 export const dynamic = 'force-dynamic';
@@ -116,7 +117,7 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
         icon="layers"
         title="Blocks"
         action={
-          <Link className="btn btn-ghost" href={`/admin/pages/${page.id}/blocks`}>
+          <Link className="btn btn-ghost" href={adminPath(`/pages/${page.id}/blocks`)}>
             Manage blocks →
           </Link>
         }

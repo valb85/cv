@@ -7,6 +7,7 @@ import { Panel } from '@/components/admin/Panel';
 import { Icon } from '@/components/Icon';
 import { getDb } from '@/db/client';
 import { pages } from '@/db/schema';
+import { adminPath } from '@/lib/admin-path';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +33,7 @@ export default function AdminPagesList() {
             {all.map((page) => (
               <tr key={page.id}>
                 <td>
-                  <Link href={`/admin/pages/${page.id}`} className="row-title">
+                  <Link href={adminPath(`/pages/${page.id}`)} className="row-title">
                     <Icon name={page.navIcon ?? undefined} size={17} />
                     {page.title}
                   </Link>

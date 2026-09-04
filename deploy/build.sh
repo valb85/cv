@@ -30,7 +30,11 @@ fi
 echo "==> building in $APP"
 cd "$APP"
 pnpm install --frozen-lockfile
-pnpm run build
+# Set explicitly rather than left to next's default: `next build` fills NODE_ENV
+# in only when it is empty, so a shell that already exports development - as the
+# dev container does - silently produces a production build running the
+# development runtime, which dies prerendering /_global-error.
+NODE_ENV=production pnpm run build
 
 echo "==> assembling into $TARGET"
 mkdir -p "$TARGET"

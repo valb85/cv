@@ -28,6 +28,10 @@ dco logs -f cv
 Credentials come from `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `.env`; the account is
 created on first boot and never overwritten afterwards.
 
+The admin sits at `/admin` here only because `ADMIN_PATH` is unset. In
+production it is set, and `/admin` stops existing — see
+[Hiding the admin](#hiding-the-admin).
+
 `dco start` only starts containers that already exist. After `dco down`, use
 `dco up -d`. Environment changes need `dco up -d <service>` — a restart keeps
 the old environment.
@@ -55,6 +59,7 @@ sudo update-ca-certificates
 ```
 apps/web-cv/          Next.js app
   src/app/            routes: /, /[slug], /admin/*, /api/*
+  src/proxy.ts        serves /admin/* from the secret ADMIN_PATH
   src/db/             schema, client, migrations, seed
   src/lib/            auth, blocks, contact, sanitize, tokens
   drizzle/            generated migration SQL
@@ -66,11 +71,45 @@ Caddyfile             local HTTPS
 ## Contact form
 
 Submissions are stored in the `messages` table and read in the admin inbox at
-`/admin/messages`, where they can be marked read or deleted. **Nothing is sent
+`ADMIN_PATH/messages`, where they can be marked read or deleted. **Nothing is sent
 by e-mail** — there is no SMTP configuration and no relay to keep working, so
 the only place a message can go missing is if it is deleted on purpose.
 
 Check the inbox; nothing will notify you.
+
+## Hiding the admin
+
+The admin route files live at `/admin` and that never changes. What changes is
+where they are *served* from: `ADMIN_PATH` in `/etc/cv.env` names a secret
+segment, `src/proxy.ts` rewrites that segment onto `/admin`, and a request
+for `/admin` itself renders the site's ordinary 404 page with a real 404 status.
+It is not quite byte-identical to any other dead URL — Next streams the internal
+rewrite target in the RSC payload — but nothing in that response names
+`ADMIN_PATH`, which is the part that matters.
+
+```bash
+openssl rand -hex 8          # ADMIN_PATH=/a1b2c3d4e5f60718
+```
+
+Rules the value has to follow: one segment, `[a-z0-9_-]`, three characters or
+more. A malformed value takes the admin offline and logs why, rather than
+quietly falling back to `/admin` — the failure mode worth ruling out. Leaving it
+unset means `/admin`, which is what local Docker development does.
+
+Nothing in the app writes the path into a page, a `robots.txt` or a sitemap, and
+`src/lib/admin-path.ts` is the only place that resolves it. Build every admin
+link through `adminPath()` from that module; a hardcoded `/admin` anywhere will
+send the browser to the URL middleware just buried.
+
+**This is a second lock, not the lock.** The password is still what stands
+between a visitor and the admin — a secret path only means nobody stumbles onto
+the login form, and it will leak the day it appears in a browser sync, a
+referrer header or a screenshot. Rotating it is a one-line edit to `/etc/cv.env`
+plus `sudo systemctl restart cv`; no rebuild.
+
+Failed sign-ins are throttled alongside it: five wrong passwords from one IP
+within fifteen minutes locks that IP out for fifteen more. The counter lives in
+the process — one systemd unit, one process — so a restart clears it.
 
 ## Content model
 
@@ -123,6 +162,7 @@ admin password:
 sudo cp deploy/cv.env.example /etc/cv.env
 sudo chown root:cv /etc/cv.env && sudo chmod 640 /etc/cv.env
 openssl rand -hex 32                      # SESSION_SECRET
+openssl rand -hex 8                       # ADMIN_PATH, e.g. /a1b2c3d4e5f60718
 sudo nano /etc/cv.env                      # + APP_DOMAIN, BASE_URL, ADMIN_PASSWORD
 ```
 
