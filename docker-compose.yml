@@ -17,6 +17,9 @@ services:
     environment:
       ADMIN_EMAIL: "${ADMIN_EMAIL}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      # Optional. Unset means the admin stays at /admin; set it in .env to
+      # exercise the secret path locally the way production does.
+      ADMIN_PATH: "${ADMIN_PATH:-}"
       BASE_URL: "${BASE_URL}"
       DATABASE_PATH: "${DATABASE_PATH}"
       ENVIRONMENT: "${ENVIRONMENT}"
