@@ -1,6 +1,7 @@
-# Production overlay. Unlike deco-pvc, which pulls pre-built images from a
-# registry, this builds on the host - one small site does not warrant a
-# registry and a CI pipeline.
+# Docker production overlay, kept as a fallback. The supported production
+# path is now non-Docker - see deploy/ and the README - because the server
+# runs Apache directly. This still works if you want a containerised host:
+# it builds in place rather than pulling from a registry.
 
 services:
   apache:

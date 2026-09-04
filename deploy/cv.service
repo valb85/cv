@@ -1,0 +1,39 @@
+# Runs the Next.js standalone server. Apache reverse-proxies to it; this unit
+# is what Docker's `restart: unless-stopped` used to provide.
+#
+#   sudo cp deploy/cv.service /etc/systemd/system/cv.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now cv
+#   systemctl status cv
+#   journalctl -u cv -f
+
+[Unit]
+Description=CV site (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+User=cv
+Group=cv
+WorkingDirectory=/srv/cv
+EnvironmentFile=/etc/cv.env
+ExecStart=/usr/bin/node /srv/cv/server.js
+Restart=always
+RestartSec=3
+
+# Creates and owns /var/lib/cv, which holds the database and uploads. Kept
+# outside /srv/cv so a redeploy overwrites the app without touching the data.
+StateDirectory=cv
+
+# The app never writes inside its own directory, so everything else is
+# read-only to it.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target
