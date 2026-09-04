@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Sacramento } from 'next/font/google';
+import { Caveat } from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import './globals.css';
@@ -8,7 +8,7 @@ import './globals.css';
  * The handwritten overlay on the hero. Self-hosted by next/font rather than
  * linked from Google at runtime: no third-party request, no layout shift.
  */
-const script = Sacramento({
+const script = Caveat({
   weight: '400',
   subsets: ['latin'],
   display: 'swap',
