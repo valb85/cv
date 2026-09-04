@@ -16,5 +16,11 @@ node_modules/
 /apps/web-cv/data/
 /apps/web-cv/uploads/
 
+# Database exports. `dco cp` lands these in the repo root on the way to the
+# server, and they hold the admin password hash and every contact message.
+*.db
+*.db-wal
+*.db-shm
+
 # TypeScript incremental build cache
 *.tsbuildinfo
