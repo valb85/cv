@@ -1,91 +1,161 @@
 # cv
 
-A single-page personal CV / vCard site for **Victor Albulescu** — static HTML, CSS and jQuery, with one PHP endpoint for the contact form.
+Personal CV site for Victor Albulescu. Content lives in SQLite and is edited
+through a built-in admin area — pages, menu entries, blocks, settings and
+contact submissions are all editable without touching code.
 
-Built on the *Karizma – Modern vCard / Resume / CV / Portfolio* template (Ideas_Factory), trimmed down and rewritten with personal content.
+Next.js 16 · React 19 · SQLite via Drizzle · Apache reverse proxy · Docker
 
----
+> Replaces a 2018 jQuery template that shipped 348K of JavaScript and hard-coded
+> every word of the CV in `index.html`. To read it: `git show 9a759e5:legacy/index.html`.
 
 ## Running it
 
-There is no build step, no package manager, no dependencies to install. Every asset is vendored under `assets/`.
-
-Open `index.html` directly in a browser and everything works **except** the contact form, which posts to `send.php`.
-
-To exercise the form you need PHP with a working `mail()`:
+`dco` is an alias for `docker compose`.
 
 ```bash
-php -S localhost:8000     # then visit http://localhost:8000
+cp .env.dev .env
+dco up -d --build      # first run, or after changing a Dockerfile
+dco start / dco stop   # afterwards
+dco logs -f cv
 ```
 
-Deployment is a plain file copy to any PHP-capable host (`.idea/deployment.xml` records a PhpStorm SFTP target named `wat ercvert`).
+| | URL |
+|---|---|
+| Site | https://cv.localhost (or http://localhost:12100) |
+| Admin | https://cv.localhost/admin |
+| Mailhog | http://localhost:12125 |
 
----
+Credentials come from `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `.env`; the account is
+created on first boot and never overwritten afterwards.
+
+`dco start` only starts containers that already exist. After `dco down`, use
+`dco up -d`. Environment changes need `dco up -d <service>` — a restart keeps
+the old environment.
+
+The browser will warn about the certificate on first visit: Caddy issues it
+from its own local CA. Either click through, or trust the CA:
+
+```bash
+dco cp caddy:/data/caddy/pki/authorities/local/root.crt /tmp/cv-root.crt
+sudo cp /tmp/cv-root.crt /usr/local/share/ca-certificates/cv-local.crt
+sudo update-ca-certificates
+```
+
+## Services
+
+| Service | Purpose | Published |
+|---|---|---|
+| `caddy` | TLS for cv.localhost, proxies to apache | 443 |
+| `apache` | Serves `/uploads` and error pages, proxies the rest to Next | 12100 |
+| `cv` | The Next.js app | — |
+| `cv-base` | Build-only: tags the base image `cv`'s Dockerfile builds `FROM` | — |
+| `mailhog` | Catches contact-form mail in dev | 12125 |
 
 ## Layout
 
 ```
-index.html                 # the live page
-index_old.html             # full untouched template (6 sections)
-index_particles.html       # hero variant: particles.js, app.js config
-index_particles_2.html     # hero variant: particles.js, nasa-particles.js config
-index_slider.html          # hero variant: pogo-slider image slideshow
-index_youtube_video.html   # hero variant: YouTube background video
-send.php                   # contact form mail handler
-assets/css/                # bootstrap, template styles, 5 colour themes
-assets/js/                 # jquery + plugins + custom.js
-assets/fonts/              # FontAwesome, Pe-icon-7-stroke, glyphicons
-assets/images/             # photos, plus unused template imagery
+apps/web-cv/          Next.js app
+  src/app/            routes: /, /[slug], /admin/*, /api/*
+  src/db/             schema, client, migrations, seed
+  src/lib/            auth, blocks, mail, sanitize, tokens
+  drizzle/            generated migration SQL
+apps/web-apache/      reverse proxy container
+deploy/               host Apache vhost for production
+Caddyfile             local HTTPS
 ```
 
-`index.html` is the only page that ships. The other `index_*.html` files are **kept-as-reference variants of the same template**, each demonstrating a different hero background; they still carry the original template's title and its full six sections (about, resume, services, portfolio, blog, contact). They are not linked from anywhere and are not maintained.
+## Content model
 
-The live page keeps only three sections: **about**, **resume**, **contact**. Its hero uses the `particles_2` variant (`particles.min.js` + `nasa-particles.js`).
+A page *is* a menu entry — `in_menu` and `nav_order` are the whole navigation
+model, so adding a page and adding its link are one action.
 
----
+Pages hold ordered **blocks**, each with a type and a typed JSON payload:
+`heading`, `rich_text`, `skill_list`, `timeline`, `fact_list`, `image`,
+`contact_form`. Adding a type means one renderer and one editor form.
 
-## How the page works
+`rich_text` and `fact_list` values support a `{{age}}` token, resolved per
+request from the `birth_date` setting — so the age is never stale and the date
+stays editable.
 
-**Split layout.** `#splitlayout` holds two halves: `.intro` (left — hero, name, social links, nav) and `.page-right` (right — content sections). Clicking a nav item toggles `open-right` / `close-right` on `#splitlayout`, which slides the intro aside and reveals the content pane. `#home` slides it back.
+`rich_text` is sanitised **on write** against an allow-list, so the database
+never holds a script payload.
 
-**Section transitions.** All sections live in the DOM at once inside `#pt-main`. Navigation never scrolls; `custom.js` swaps `pt-page-current` / `active_sec` classes and applies a randomly-cycled pair of in/out animation classes from `animations.css`. An `animationend` listener strips the animation classes afterwards.
+### Seeding
 
-**Responsive split.** `Modernizr.mq('(max-width: 991px)')` decides between the desktop split-panel behaviour and a mobile flow with a hamburger overlay (`.mob-menu`).
+```bash
+dco exec cv pnpm run db:seed          # refuses if pages already exist
+dco exec cv pnpm run db:seed --force  # replaces them
+```
 
-**Contact form.** `custom.js` intercepts the submit click, validates name/email/message client-side, then POSTs serialized form data to `send.php` via AJAX. It shows `.msg_success` only when the response body is exactly the string `SENDING`.
+## Deploying
 
-`assets/js/custom.js` is the single behaviour file; its header carries a 14-item table of contents. Several of those items (isotope grid, magnific popup, slick carousel, pogo-slider, YTPlayer) are dead on `index.html` — every block is guarded by a `.length` check on markup that only the template variants contain.
+Target: Ubuntu 22.04 with Apache and Docker. The host Apache terminates TLS and
+proxies to the container, which publishes on loopback only.
 
----
+```bash
+git clone <repo> /srv/cv && cd /srv/cv
+cp .env.prod .env
+```
 
-## Editing content
+Edit `.env` — set `APP_DOMAIN`, and fill in the blanks:
 
-All CV content is hard-coded in `index.html`:
+```bash
+openssl rand -hex 32        # SESSION_SECRET
+```
 
-| What | Where |
-|---|---|
-| Typed hero strings | `#typed-strings` (~line 91) |
-| Personal details (DOB, address, e-mail) | `.more_info` block (~line 97) |
-| Bio paragraphs | `.more-about-me` (~line 217) |
-| Skills & languages | `.skills` — five `<span>`s per row, `true` = filled dot, `false` = empty (~line 223) |
-| Education & experience | `#resume` section `.item` blocks (~line 355) |
-| Contact details | `#contact` section (~line 450) |
-| Social links | `.social-icons` (~line 166) |
+`ADMIN_PASSWORD`, and `SMTP_*` for a real relay. Container `mail()` does not
+reach Gmail; use SES, SendGrid, or your mail host.
 
-**Age is computed, not written.** `calculateAge()` at the end of `custom.js` fills every `.my-age` element on load. The literal `111` in the HTML is a placeholder that is only visible if JavaScript fails.
+```bash
+dco up -d --build
+```
 
-**Colour theme.** `assets/css/style.css` ships the default. To change accent colour, uncomment one of the five `color-*.css` links in `<head>` (yellow, purple, green, red, blue) — each overrides the same set of selectors.
+This builds on the server — there is no registry. `./data/db` and
+`./data/uploads` are created as bind mounts and hold everything that matters.
 
----
+Then the vhost:
 
-## Known issues
+```bash
+sudo cp deploy/apache-vhost.conf /etc/apache2/sites-available/cv.conf
+sudo sed -i 's/cv.example.com/YOUR-DOMAIN/g' /etc/apache2/sites-available/cv.conf
+sudo a2enmod proxy proxy_http headers
+sudo a2ensite cv
+sudo apache2ctl configtest && sudo systemctl reload apache2
+sudo certbot --apache -d YOUR-DOMAIN
+```
 
-- **The date of birth is written twice** — as `birthDate` in `custom.js` and as text in the `.more_info` block of `index.html`. Changing one does not change the other.
-- **`send.php` reads `$_POST` keys unconditionally**, emitting warnings on a bare GET.
-- **Typo in the hero typed strings**: `VICTOR ALBULESCu`.
-- **`<html lang="zxx">`** is a template leftover (`zxx` means "no linguistic content"); it should be `en`.
-- **Three social icons are placeholders** — Twitter, Instagram and Vimeo point at `javascript:void(0)`.
-- **Working tree shows 87 modified files with no content change.** They are permission-only diffs (`100755` → `100644`). Either commit them or set `git config core.fileMode false`.
+### First content
+
+The production image is a Next.js standalone build and does not contain the
+seed script. Either create pages through the admin, or copy a database up:
+
+```bash
+# on the dev machine, take a consistent copy (the db runs in WAL mode,
+# so copying the .db file alone can lose recent writes)
+dco exec cv node -e "new (require('better-sqlite3'))(process.env.DATABASE_PATH).exec(\"VACUUM INTO '/srv/data/out.db'\")"
+dco cp cv:/srv/data/out.db ./cv.db
+
+# on the server
+dco stop cv && cp cv.db data/db/cv.db && rm -f data/db/cv.db-wal data/db/cv.db-shm && dco start cv
+```
+
+### Backups
+
+```bash
+cp data/db/cv.db backup-$(date +%F).db   # with the stack stopped
+tar czf uploads-$(date +%F).tar.gz data/uploads
+```
+
+## Notes
+
+- **Two Docker daemons.** deco-pvc and this project both run under Docker
+  Desktop (`desktop-linux`). If `dco` cannot reach the daemon, check
+  `docker context show`. Running the same stack under two daemons creates
+  duplicate containers that fight over host ports.
+- **`.next` lives in a named volume**, not the source tree. Docker Desktop
+  remaps container root to host uid 100999, so build output written through the
+  bind mount ends up unwritable by the user who owns the source.
 
 ## License
 

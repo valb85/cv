@@ -1,12 +1,44 @@
+# Production overlay. Unlike deco-pvc, which pulls pre-built images from a
+# registry, this builds on the host - one small site does not warrant a
+# registry and a CI pipeline.
+
 services:
   apache:
+    build:
+      context: apps/web-apache
+      dockerfile: Dockerfile
+      target: production
+      args:
+        IMAGE_APACHE_BASE: "${IMAGE_APACHE_BASE}"
     volumes:
       - ./data/uploads:/var/www/uploads
     ports:
-      # Loopback only - the host Apache vhost proxies into this.
+      # Loopback only - the host Apache vhost proxies into this, so the
+      # container is never reachable from outside the machine.
       - "127.0.0.1:12100:80"
 
   cv:
+    build:
+      context: apps/web-cv
+      dockerfile: Dockerfile
+      target: production
+      args:
+        IMAGE_CV_BASE: "${IMAGE_CV_BASE}"
     volumes:
       - ./data/db:/srv/data
       - ./data/uploads:/srv/uploads
+    depends_on:
+      - cv-base
+
+  # Build-only: tags the base image that cv's Dockerfile does FROM. It idles
+  # rather than exiting so compose keeps the tag around, the same shape as
+  # deco-pvc's *-base services.
+  cv-base:
+    build:
+      context: apps/web-cv
+      dockerfile: Dockerfile.base
+      target: base
+      tags:
+        - "${IMAGE_CV_BASE}"
+    restart: unless-stopped
+    command: tail -f /dev/null
