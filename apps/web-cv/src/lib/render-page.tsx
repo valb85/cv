@@ -20,7 +20,7 @@ export const pageMetadata = (slug: string): Metadata => {
   };
 };
 
-export const renderSlug = (slug: string) => {
+export const renderSlug = (slug: string, contactSent = false) => {
   const content = getPageWithBlocks(slug);
 
   if (!content) {
@@ -39,6 +39,7 @@ export const renderSlug = (slug: string) => {
       nav={getNavEntries()}
       tokens={buildTokens()}
       siteTitle={getSetting('site_title') ?? content.page.title}
+      contactSent={contactSent}
     />
   );
 };

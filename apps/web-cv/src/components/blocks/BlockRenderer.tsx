@@ -8,7 +8,15 @@ import { FactListBlock } from './FactListBlock';
 import { SkillListBlock } from './SkillListBlock';
 import { TimelineBlock } from './TimelineBlock';
 
-export const BlockRenderer = ({ block, tokens }: { block: RenderableBlock; tokens: Tokens }) => {
+export const BlockRenderer = ({
+  block,
+  tokens,
+  contactSent = false,
+}: {
+  block: RenderableBlock;
+  tokens: Tokens;
+  contactSent?: boolean;
+}) => {
   switch (block.type) {
     case 'heading':
       return block.data.level === 3 ? (
@@ -45,6 +53,8 @@ export const BlockRenderer = ({ block, tokens }: { block: RenderableBlock; token
       );
 
     case 'contact_form':
-      return <ContactFormBlock data={block.data} />;
+      return (
+        <ContactFormBlock data={block.data} initialStatus={contactSent ? 'sent' : 'idle'} />
+      );
   }
 };

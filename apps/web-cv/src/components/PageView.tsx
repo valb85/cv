@@ -8,11 +8,13 @@ export const PageView = ({
   nav,
   tokens,
   siteTitle,
+  contactSent,
 }: {
   content: PageWithBlocks;
   nav: NavEntry[];
   tokens: Tokens;
   siteTitle: string;
+  contactSent: boolean;
 }) => (
   <>
     <header className="site-header">
@@ -21,7 +23,7 @@ export const PageView = ({
     </header>
     <main className="page">
       {content.blocks.map((block) => (
-        <BlockRenderer key={block.id} block={block} tokens={tokens} />
+        <BlockRenderer key={block.id} block={block} tokens={tokens} contactSent={contactSent} />
       ))}
     </main>
   </>
