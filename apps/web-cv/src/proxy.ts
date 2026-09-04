@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { adminBasePath, INTERNAL_ADMIN_PATH } from '@/lib/admin-path';
@@ -13,6 +15,20 @@ const under = (pathname: string, base: string): boolean =>
   pathname === base || pathname.startsWith(`${base}/`);
 
 /**
+ * The standalone server runs the proxy again on the URL it was just rewritten
+ * to - `next dev` does not - so the second pass arrives at /admin and the rule
+ * below buries the rewrite this proxy had only just made. Nothing in the
+ * incoming headers distinguishes that pass from a real request for /admin, so
+ * the rewrite marks itself.
+ *
+ * The marker is a token minted per process rather than a fixed string,
+ * because a header a caller could guess would let anyone skip straight past
+ * the burial to the login form - which is the entire point of ADMIN_PATH.
+ */
+const REENTRY_HEADER = 'x-admin-rewrite';
+const REENTRY_TOKEN = randomUUID();
+
+/**
  * A slug that cannot exist - `createPage` strips everything outside [a-z0-9-] -
  * so `[slug]` renders the site's own 404 page, with a real 404 status. Next
  * streams the rewrite target in the RSC payload, so the response is not quite
@@ -23,6 +39,10 @@ const notFound = (request: NextRequest): NextResponse =>
 
 export const proxy = (request: NextRequest): NextResponse => {
   const { pathname } = request.nextUrl;
+
+  if (request.headers.get(REENTRY_HEADER) === REENTRY_TOKEN) {
+    return NextResponse.next();
+  }
 
   let base: string;
 
@@ -46,10 +66,12 @@ export const proxy = (request: NextRequest): NextResponse => {
 
   if (under(pathname, base)) {
     const url = request.nextUrl.clone();
+    const headers = new Headers(request.headers);
 
     url.pathname = `${INTERNAL_ADMIN_PATH}${pathname.slice(base.length)}`;
+    headers.set(REENTRY_HEADER, REENTRY_TOKEN);
 
-    return NextResponse.rewrite(url);
+    return NextResponse.rewrite(url, { request: { headers } });
   }
 
   return NextResponse.next();
