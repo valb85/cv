@@ -5,8 +5,28 @@ volumes:
     name: "${COMPOSE_PROJECT_NAME}-uploads-data"
   node-modules-data:
     name: "${COMPOSE_PROJECT_NAME}-node-modules-data"
+  caddy-data:
+    name: "${COMPOSE_PROJECT_NAME}-caddy-data"
+  caddy-config:
+    name: "${COMPOSE_PROJECT_NAME}-caddy-config"
 
 services:
+  # Terminates TLS for https://cv.localhost and proxies to apache over the
+  # compose network. Only :443 is published, so the host caddy service keeps :80.
+  caddy:
+    image: "${IMAGE_CADDY_BASE}"
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    environment:
+      TZ: "Europe/Bucharest"
+    depends_on:
+      - apache
+
   apache:
     build:
       context: apps/web-apache
