@@ -143,6 +143,10 @@ Apache cannot run Next.js the way it runs PHP; there is no `mod_next`. The app
 is a Node server, systemd supervises it, and Apache reverse-proxies to it on
 loopback.
 
+The sections below cover what each piece is for. For the ordered sequence to
+type on a fresh server, and what to do when a step fails, see
+[deploy/DEPLOY.md](deploy/DEPLOY.md).
+
 ### Once, on the server
 
 Ubuntu 22.04 ships Node 12, which is far too old — `next` needs ≥20.9 and
@@ -152,7 +156,7 @@ Ubuntu 22.04 ships Node 12, which is far too old — `next` needs ≥20.9 and
 curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
 sudo apt install -y nodejs build-essential python3
 sudo npm i -g pnpm
-sudo useradd --system --home /srv/cv cv
+sudo useradd --system --home /srv/cv --shell /usr/sbin/nologin cv
 ```
 
 Configuration, kept out of the repo because it holds the session secret and the
