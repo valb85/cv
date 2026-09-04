@@ -1,0 +1,54 @@
+volumes:
+  db-data:
+    name: "${COMPOSE_PROJECT_NAME}-db-data"
+  uploads-data:
+    name: "${COMPOSE_PROJECT_NAME}-uploads-data"
+  node-modules-data:
+    name: "${COMPOSE_PROJECT_NAME}-node-modules-data"
+
+services:
+  apache:
+    build:
+      context: apps/web-apache
+      dockerfile: Dockerfile
+      target: production
+      args:
+        IMAGE_APACHE_BASE: "${IMAGE_APACHE_BASE}"
+    volumes:
+      - uploads-data:/var/www/uploads
+    ports:
+      - "12100:80"
+
+  cv:
+    build:
+      context: apps/web-cv
+      dockerfile: Dockerfile
+      target: development
+      args:
+        IMAGE_CV_BASE: "${IMAGE_CV_BASE}"
+    volumes:
+      - ./apps/web-cv:/srv:delegated
+      - node-modules-data:/srv/node_modules
+      - db-data:/srv/data
+      - uploads-data:/srv/uploads
+    depends_on:
+      - cv-base
+
+  cv-base:
+    build:
+      context: apps/web-cv
+      dockerfile: Dockerfile.base
+      target: base
+      tags:
+        - "${IMAGE_CV_BASE}"
+    command: tail -f /dev/null
+
+  mailhog:
+    image: mailhog/mailhog
+    restart: unless-stopped
+    logging:
+      driver: 'none'
+    environment:
+      TZ: "Europe/Bucharest"
+    ports:
+      - "8125:8025"

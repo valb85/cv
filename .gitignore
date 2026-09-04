@@ -1,3 +1,17 @@
 # JetBrains IDE settings (PhpStorm, IntelliJ)
 .idea/
 *.iml
+
+# Node
+node_modules/
+.next/
+.pnpm-store/
+
+# Active compose config - .env.dev / .env.prod are the committed templates
+/.env
+
+# Runtime data: SQLite database and uploaded media.
+# Bind-mount targets in prod, and container-created mount points in dev.
+/data/
+/apps/web-cv/data/
+/apps/web-cv/uploads/

@@ -1,0 +1,9 @@
+# pnpm 10+ blocks dependency build scripts unless approved. better-sqlite3
+# ships a prebuilt binary for this Node ABI so nothing is compiled, but an
+# unapproved package still makes `pnpm i` exit non-zero and kill the container.
+allowBuilds:
+  better-sqlite3: true
+  esbuild: true
+
+minimumReleaseAgeExclude:
+  - '@types/react-dom@19.2.7'

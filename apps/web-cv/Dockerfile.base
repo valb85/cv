@@ -1,0 +1,39 @@
+FROM node:24-slim AS base
+
+ENV PORT=3000 \
+  PNPM_HOME="/usr/local/bin"
+
+EXPOSE 3000
+
+# python3/make/g++ are required to compile better-sqlite3 when no prebuild
+# matches the Node ABI. Both build and runtime stages share this base so the
+# compiled binding always matches the libc it runs against.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    g++ \
+    make \
+    nano \
+    procps \
+    python3 \
+    supervisor \
+    wget \
+  && rm -rf /var/lib/apt/lists/* \
+  && npm install -g pnpm@11.25.0 \
+  && pnpm config set global-bin-dir "/usr/local/bin" \
+  && pnpm config set store-dir /var/cache/.pnpm-store \
+  && sed -i 's/\[supervisord\]/\[supervisord\]\nuser=root/' /etc/supervisor/supervisord.conf \
+  && printf '%s\n' \
+    '[program:cv]' \
+    'command=' \
+    'directory=/srv' \
+    'autorestart=true' \
+    'stdout_logfile=/dev/stdout' \
+    'stdout_logfile_maxbytes = 0' \
+    'stderr_logfile=/dev/stderr' \
+    'stderr_logfile_maxbytes = 0' \
+    '' > /etc/supervisor/conf.d/cv.conf
+
+WORKDIR /srv
+
+CMD ["supervisord", "-nc", "/etc/supervisor/supervisord.conf"]

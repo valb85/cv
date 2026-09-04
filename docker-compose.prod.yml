@@ -1,0 +1,12 @@
+services:
+  apache:
+    volumes:
+      - ./data/uploads:/var/www/uploads
+    ports:
+      # Loopback only - the host Apache vhost proxies into this.
+      - "127.0.0.1:12100:80"
+
+  cv:
+    volumes:
+      - ./data/db:/srv/data
+      - ./data/uploads:/srv/uploads
