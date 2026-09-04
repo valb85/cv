@@ -1,4 +1,4 @@
-import { updateSettings } from '@/app/admin/actions';
+import { changePassword, updateSettings } from '@/app/admin/actions';
 import { AdminForm } from '@/components/admin/AdminForm';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Panel } from '@/components/admin/Panel';
@@ -54,6 +54,24 @@ export default function SettingsPage() {
           </Panel>
         ))}
 
+      </AdminForm>
+
+      <AdminForm action={changePassword} className="editor-grid" submitLabel="Change password">
+        <Panel icon="user" title="Password">
+          <label>
+            Current password
+            <input name="current_password" type="password" required autoComplete="current-password" />
+          </label>
+          <label>
+            New password
+            <input name="new_password" type="password" required autoComplete="new-password" />
+            <span className="hint">At least 12 characters.</span>
+          </label>
+          <label>
+            Repeat new password
+            <input name="confirm_password" type="password" required autoComplete="new-password" />
+          </label>
+        </Panel>
       </AdminForm>
     </>
   );

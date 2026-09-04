@@ -6,16 +6,19 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { getDb } from '@/db/client';
-import { blocks, messages, pages, settings } from '@/db/schema';
+import { blocks, messages, pages, settings, users } from '@/db/schema';
 import { adminPath } from '@/lib/admin-path';
 import { authenticate, clearSessionCookie, requireUser, setSessionCookie } from '@/lib/auth';
 import { isBlockType, type BlockType } from '@/lib/blocks';
 import { defaultBlockData, parseBlockForm } from '@/lib/block-forms';
 import { clearLoginAttempts, loginLockout, recordFailedLogin } from '@/lib/login-throttle';
+import { hashPassword } from '@/lib/password';
 
 const str = (data: FormData, key: string): string => String(data.get(key) ?? '').trim();
 const num = (data: FormData, key: string): number => Number(data.get(key) ?? 0) || 0;
 const bool = (data: FormData, key: string): boolean => data.get(key) === 'on';
+
+const MIN_PASSWORD_LENGTH = 12;
 
 // Apache adds X-Forwarded-For on the way through, so this is the real client
 // rather than 127.0.0.1 for every single request.
@@ -47,6 +50,41 @@ export const login = async (_: string | null, data: FormData): Promise<string | 
   clearLoginAttempts(key);
   await setSessionCookie(userId);
   redirect(adminPath());
+};
+
+/**
+ * ADMIN_PASSWORD only ever seeds the very first boot, so without this the
+ * password set on day one is the password forever - and a database copied up
+ * from a laptop brings that laptop's password with it.
+ *
+ * Existing sessions survive a change: the session token is signed over the
+ * user id, not the password. They expire on their own within SESSION_TTL.
+ */
+export const changePassword = async (_: string | null, data: FormData): Promise<string | null> => {
+  const user = await requireUser();
+
+  const current = String(data.get('current_password') ?? '');
+  const next = String(data.get('new_password') ?? '');
+
+  if (!authenticate(user.email, current)) {
+    return 'That is not your current password.';
+  }
+
+  if (next.length < MIN_PASSWORD_LENGTH) {
+    return `The new password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+  }
+
+  if (next !== String(data.get('confirm_password') ?? '')) {
+    return 'The two new passwords do not match.';
+  }
+
+  if (next === current) {
+    return 'That is already your password.';
+  }
+
+  getDb().update(users).set({ passwordHash: hashPassword(next) }).where(eq(users.id, user.id)).run();
+
+  return 'Password changed.';
 };
 
 export const logout = async (): Promise<void> => {
