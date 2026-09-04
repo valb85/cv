@@ -9,6 +9,8 @@ export const register = async (): Promise<void> => {
   }
 
   const { runMigrations } = await import('./db/migrate');
+  const { ensureAdminUser } = await import('./db/ensure-admin');
 
   runMigrations();
+  ensureAdminUser();
 };
