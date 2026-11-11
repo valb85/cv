@@ -1,0 +1,504 @@
+/* ============================================================
+   Landing — design/dual_2.png
+   ------------------------------------------------------------
+   On wide screens the stage is sized exactly like the art under
+   object-fit: cover, so every block is placed in percentages of
+   the picture and font sizes are in cqw of it: the copy sits
+   where the mockup put it at any 4:3 – 5:2 window.
+   Anywhere else the copy stacks over a dimmed copy of the art.
+   ============================================================ */
+
+.landing {
+  --night-ink: #eaf1fa;
+  --night-muted: #b9c6d6;
+  --night-accent: #49c6ff;
+  --night-glow: rgba(73, 198, 255, 0.45);
+  --day-ink: #3a2417;
+  --day-muted: #4a3324;
+  --day-line: #5a3a25;
+
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  background: #070c14;
+  color: var(--night-ink);
+}
+
+.landing-art {
+  object-fit: cover;
+  object-position: 45% 70%;
+  z-index: 0;
+}
+
+.landing-stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  min-height: 100svh;
+  padding: 2rem 1rem 2.5rem;
+}
+
+.landing-stage > :not(.landing-art) {
+  position: relative;
+  z-index: 1;
+}
+
+/* dim the art behind stacked copy */
+.landing-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(7, 12, 20, 0.82), rgba(7, 12, 20, 0.45) 55%, rgba(7, 12, 20, 0.8));
+  pointer-events: none;
+}
+
+/* ---------- header ---------- */
+
+.landing-head {
+  text-align: center;
+}
+
+.landing-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1em;
+  font-size: clamp(0.95rem, 4vw, 1.15rem);
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.landing-name::before,
+.landing-name::after {
+  content: "";
+  flex: 0 1 7.5em;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(234, 241, 250, 0.55));
+}
+
+.landing-name::after {
+  transform: scaleX(-1);
+}
+
+.landing-tagline {
+  margin-top: 0.2rem;
+  color: var(--night-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  letter-spacing: 0.14em;
+}
+
+/* ---------- sides ---------- */
+
+.landing-sides {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.75rem 1.25rem;
+  border-radius: 20px;
+}
+
+.side-dev {
+  background: rgba(8, 16, 28, 0.62);
+  border: 1px solid rgba(73, 198, 255, 0.18);
+  backdrop-filter: blur(6px);
+}
+
+.side-notes {
+  background: rgba(252, 241, 224, 0.9);
+  border: 1px solid rgba(90, 58, 37, 0.2);
+  color: var(--day-ink);
+}
+
+.side-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  align-self: flex-start;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.side-title {
+  font-size: 2.7rem;
+  line-height: 1.05;
+}
+
+.side-dev .side-title {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #ffffff 30%, #a9dcff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px var(--night-glow));
+}
+
+.side-notes .side-title {
+  font-family: var(--script);
+  font-size: 4.6rem;
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0;
+  color: var(--day-ink);
+}
+
+.side-rule {
+  align-self: flex-start;
+  width: 4.6rem;
+  height: 3px;
+  margin: 0.8rem 0 1rem 0.2rem;
+  border-radius: 2px;
+  background: var(--night-accent);
+  box-shadow: 0 0 12px var(--night-glow);
+}
+
+.side-lede {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.side-dev .side-lede {
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--night-ink);
+}
+
+.side-lede-script {
+  margin: 0.4rem 0 0.5rem;
+  font-family: var(--script);
+  font-size: 1.9rem;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+.side-notes .side-lede {
+  color: var(--day-muted);
+}
+
+.side-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9em;
+  margin-top: 1.4rem;
+  padding: 0.8em 2em;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.side-dev .side-cta {
+  border-color: var(--night-accent);
+  color: var(--night-ink);
+  box-shadow: 0 0 18px rgba(73, 198, 255, 0.25), inset 0 0 14px rgba(73, 198, 255, 0.12);
+}
+
+.side-dev .side-cta:hover {
+  background: rgba(73, 198, 255, 0.12);
+  box-shadow: 0 0 26px var(--night-glow), inset 0 0 14px rgba(73, 198, 255, 0.2);
+}
+
+.side-notes .side-cta {
+  border-color: var(--day-line);
+  color: var(--day-ink);
+}
+
+.side-notes .side-cta:hover {
+  background: rgba(90, 58, 37, 0.08);
+}
+
+.side-cta:hover { transform: translateY(-1px); }
+
+.side-cta.is-soon {
+  opacity: 0.7;
+  border-style: dashed;
+  cursor: default;
+}
+
+.side-cta.is-soon:hover {
+  background: none;
+  transform: none;
+}
+
+.side-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1.2rem;
+  color: var(--night-ink);
+  font-size: 0.95rem;
+}
+
+.side-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.1em 0.75em;
+  transition: color 160ms ease;
+}
+
+.side-links a + a {
+  border-left: 1px solid rgba(185, 198, 214, 0.35);
+}
+
+.side-links a:hover { color: var(--night-accent); }
+.side-links svg { color: var(--night-accent); }
+
+.landing-motto {
+  order: -1;
+  text-align: center;
+  font-size: 0.95rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1.7;
+}
+
+.landing-motto::before,
+.landing-motto::after {
+  content: "";
+  display: block;
+  width: 3.8em;
+  height: 1px;
+  margin: 0.9em auto;
+  background: rgba(234, 241, 250, 0.6);
+}
+
+/* ---------- interests ---------- */
+
+.landing-interests {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-interests li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
+  color: var(--night-ink);
+}
+
+/* ============================================================
+   Stage mode: the copy is laid over the art like the mockup
+   ============================================================ */
+
+@media (min-width: 960px) and (min-aspect-ratio: 4/3) and (max-aspect-ratio: 5/2) {
+  .landing {
+    height: 100vh;
+    height: 100svh;
+  }
+
+  /* 1672 × 941 — the size cover gives the art */
+  .landing-stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100vw, 177.68vh);
+    height: max(100vh, 56.28vw);
+    transform: translate(-50%, -50%);
+    display: block;
+    padding: 0;
+    container-type: size;
+  }
+
+  .landing-stage::before { content: none; }
+
+  .landing-art {
+    object-position: center;
+  }
+
+  .landing-stage > :not(.landing-art) {
+    position: absolute;
+  }
+
+  .landing-head {
+    top: 1.5%;
+    left: 0;
+    right: 0;
+  }
+
+  .landing-name {
+    font-size: 1.6cqw;
+    letter-spacing: 0.42em;
+    text-indent: 0.42em; /* balance the trailing letter-space */
+    text-shadow: 0 0 20px rgba(120, 180, 255, 0.35);
+  }
+
+  .landing-tagline {
+    margin-top: 0.1cqw;
+    font-size: 1.02cqw;
+  }
+
+  .landing-sides {
+    position: static;
+    display: contents;
+  }
+
+  .side {
+    position: absolute;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    backdrop-filter: none;
+  }
+
+  .side-dev {
+    top: 20.8%;
+    left: 12.6%;
+    width: 28%;
+  }
+
+  .side-notes {
+    top: 18.6%;
+    left: 62%;
+    width: 21%;
+  }
+
+  .side-kicker {
+    font-size: 1.62cqw;
+    margin-left: 3cqw;
+  }
+
+  .side-notes .side-kicker {
+    margin-left: 0;
+  }
+
+  .side-dev .side-kicker svg,
+  .side-notes .side-kicker svg {
+    width: 2.1cqw;
+    height: 2.1cqw;
+  }
+
+  .side-notes .side-kicker svg {
+    width: 3.2cqw;
+    height: 3.2cqw;
+    margin-right: 0.2cqw;
+    transform: translateY(-0.8cqw);
+  }
+
+  .side-dev .side-title {
+    font-size: 3.7cqw;
+    margin-top: 0.2cqw;
+  }
+
+  .side-notes .side-title {
+    font-size: 7.6cqw;
+    margin-top: -1.2cqw;
+    margin-left: 1cqw;
+  }
+
+  .side-rule {
+    width: 4.5cqw;
+    height: 0.25cqw;
+    margin: 0.75cqw 0 1.1cqw 3.4cqw;
+  }
+
+  .side-dev .side-lede {
+    font-size: 1.45cqw;
+  }
+
+  .side-lede-script {
+    font-size: 2.35cqw;
+    margin: 0 0 0.6cqw;
+  }
+
+  .side-notes .side-lede {
+    font-size: 1.12cqw;
+    line-height: 1.5;
+  }
+
+  .side-cta {
+    margin-top: 1.5cqw;
+    padding: 0.85cqw 2.6cqw;
+    font-size: 1.2cqw;
+    border-width: 0.12cqw;
+  }
+
+  .side-cta svg {
+    width: 1.6cqw;
+    height: 1.6cqw;
+  }
+
+  .side-notes .side-cta {
+    margin-top: 1.4cqw;
+    padding: 0.9cqw 3.6cqw;
+  }
+
+  .side-links {
+    flex-wrap: nowrap;
+    margin-top: 1.4cqw;
+    font-size: 0.98cqw;
+  }
+
+  .side-links a {
+    padding: 0 1cqw;
+  }
+
+  .side-links svg {
+    width: 1.45cqw;
+    height: 1.45cqw;
+  }
+
+  .landing-motto {
+    position: absolute;
+    top: 28%;
+    left: 40%;
+    width: 20.5%;
+    font-size: 1.28cqw;
+    color: var(--night-ink);
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+  }
+
+  .landing-interests {
+    top: 87%;
+    left: 25.5%;
+    width: 50%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .landing-interests li {
+    flex: 1;
+    gap: 0.45cqw;
+    font-size: 1cqw;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+  }
+
+  .landing-interests li + li {
+    border-left: 1px solid rgba(185, 198, 214, 0.28);
+  }
+
+  .landing-interests svg {
+    width: 2cqw;
+    height: 2cqw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-cta { transition: none; }
+}

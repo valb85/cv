@@ -7,9 +7,8 @@ import { useState } from 'react';
 
 import { Icon } from '@/components/Icon';
 import { SocialLinks } from '@/components/SocialLinks';
+import { pageHref } from '@/lib/page-href';
 import type { NavEntry } from '@/lib/queries';
-
-const href = (slug: string): string => (slug === 'home' ? '/' : `/${slug}`);
 
 /**
  * Fixed rail on desktop; on narrow screens it collapses to a bar with a
@@ -70,7 +69,7 @@ export const SiteSidebar = ({
             {nav.map((entry) => (
               <li key={entry.slug}>
                 <Link
-                  href={href(entry.slug)}
+                  href={pageHref(entry.slug)}
                   aria-current={entry.slug === currentSlug ? 'page' : undefined}
                   onClick={() => setOpen(false)}
                 >

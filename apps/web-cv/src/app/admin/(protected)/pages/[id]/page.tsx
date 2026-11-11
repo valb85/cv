@@ -12,6 +12,7 @@ import { getDb } from '@/db/client';
 import { pages } from '@/db/schema';
 import { adminPath } from '@/lib/admin-path';
 import { ICON_NAMES } from '@/lib/icons';
+import { pageHref } from '@/lib/page-href';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +35,7 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
         extra={
           <Link
             className="btn btn-ghost"
-            href={page.slug === 'home' ? '/' : `/${page.slug}`}
+            href={pageHref(page.slug)}
             target="_blank"
           >
             Preview
