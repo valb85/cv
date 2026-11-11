@@ -1,14 +1,21 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
+import { BrandMark } from '@/components/BrandMark';
 import { Icon } from '@/components/Icon';
 import { SocialLinks } from '@/components/SocialLinks';
 import { pageHref } from '@/lib/page-href';
 import type { NavEntry } from '@/lib/queries';
+
+/** "Victor Albulescu" -> ["Victor", "Albulescu"]: the surname takes the accent. */
+const splitName = (name: string): [string, string] => {
+  const at = name.trim().lastIndexOf(' ');
+
+  return at > 0 ? [name.slice(0, at), name.slice(at + 1)] : [name, ''];
+};
 
 /**
  * Fixed rail on desktop; on narrow screens it collapses to a bar with a
@@ -25,14 +32,13 @@ export const SiteSidebar = ({
   settings: Record<string, string>;
 }) => {
   const [open, setOpen] = useState(false);
+  const [first, last] = splitName(settings.site_title ?? '');
 
   return (
     <>
       <div className="mobile-bar">
         <Link href="/" className="mobile-brand">
-          {settings.avatar ? (
-            <Image className="avatar avatar-sm" src={settings.avatar} alt="" width={72} height={72} />
-          ) : null}
+          <BrandMark size={34} />
           <span>{settings.site_title}</span>
         </Link>
         <button
@@ -49,20 +55,16 @@ export const SiteSidebar = ({
       {open ? <button type="button" className="scrim" aria-hidden="true" onClick={() => setOpen(false)} /> : null}
 
       <aside className={open ? 'sidebar open' : 'sidebar'}>
-        <div className="identity">
-          {settings.avatar ? (
-            <Image
-              className="avatar"
-              src={settings.avatar}
-              alt={settings.site_title ?? ''}
-              width={220}
-              height={220}
-              priority
-            />
-          ) : null}
-          <p className="site-title">{settings.site_title}</p>
-          {settings.role ? <p className="role">{settings.role}</p> : null}
-        </div>
+        <Link href="/" className="identity" aria-label={`${settings.site_title ?? 'Home'} - start page`}>
+          <BrandMark className="brand-mark" size={52} />
+          <span className="identity-text">
+            <span className="site-title">
+              {first}
+              {last ? <span className="accent">{last}</span> : null}
+            </span>
+            {settings.role ? <span className="role">{settings.role}</span> : null}
+          </span>
+        </Link>
 
         <nav className="site-nav" aria-label="Sections">
           <ul>
