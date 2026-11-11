@@ -17,7 +17,6 @@ const GROUPS: { icon: string; title: string; fields: Field[] }[] = [
       { key: 'role', label: 'Role', hint: 'Shown under your name in the sidebar.' },
       { key: 'avatar', label: 'Avatar image', hint: 'Path under /images. Blank hides it.' },
       { key: 'birth_date', label: 'Date of birth', hint: 'YYYY-MM-DD. Drives the {{age}} token.' },
-      { key: 'footer_note', label: 'Footer note' },
     ],
   },
   {

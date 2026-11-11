@@ -26,7 +26,6 @@ const SETTINGS: Record<string, string> = {
   site_title: 'Victor Albulescu',
   role: 'Web Developer',
   avatar: '/images/me.jpg',
-  footer_note: 'Built with ✳ and passion.',
   // Drives the {{age}} token. Deliberately not shown as a fact on the home
   // page - the age is the useful part, the date of birth is not.
   birth_date: '1985-08-04',

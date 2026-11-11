@@ -87,12 +87,6 @@ export const SiteSidebar = ({
           <SocialLinks settings={settings} />
           <p className="colophon">
             © {new Date().getFullYear()} {settings.site_title}
-            {settings.footer_note ? (
-              <>
-                <br />
-                {settings.footer_note}
-              </>
-            ) : null}
           </p>
         </div>
       </aside>
