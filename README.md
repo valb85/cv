@@ -266,6 +266,13 @@ sudo tar czf uploads-$(date +%F).tar.gz -C /var/lib/cv uploads
 
 `VACUUM INTO` takes a consistent copy without stopping the service.
 
+## Download CV
+
+Not built yet: the home page's **Download CV** button links to `#` until the
+PDF is generated from the site's own content. The plan — print route, headless
+Chromium, cache keyed on the last admin edit — is in
+[docs/cv-generation.md](docs/cv-generation.md).
+
 ## Notes
 
 - **Two Docker daemons.** deco-pvc and this project both run under Docker

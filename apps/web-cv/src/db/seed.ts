@@ -68,7 +68,8 @@ const SEED_PAGES: SeedPage[] = [
           primaryHref: '/contact',
           primaryIcon: 'mail',
           secondaryLabel: 'Download CV',
-          secondaryHref: '/cv.pdf',
+          // Placeholder until the CV PDF is generated - docs/cv-generation.md
+          secondaryHref: '#',
           secondaryIcon: 'file',
           image: '/images/hero-desk.jpg',
           script: 'Code\nTravel\nPets\nRepeat',

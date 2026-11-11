@@ -5,6 +5,8 @@ import { Icon } from '@/components/Icon';
 import type { BlockDataMap } from '@/lib/blocks';
 import { applyTokens, type Tokens } from '@/lib/tokens';
 
+const isPlaceholder = (href: string | undefined): boolean => !href || href.startsWith('#');
+
 export const HeroBlock = ({
   data,
   tokens,
@@ -44,7 +46,14 @@ export const HeroBlock = ({
             </Link>
           ) : null}
           {data.secondaryLabel ? (
-            <a className="btn btn-ghost" href={data.secondaryHref ?? '#'} download>
+            // `download` on a placeholder href would save the current page as
+            // a file - the attribute only goes on a real target. See
+            // docs/cv-generation.md for the PDF this button is waiting on.
+            <a
+              className="btn btn-ghost"
+              href={data.secondaryHref || '#'}
+              download={isPlaceholder(data.secondaryHref) ? undefined : true}
+            >
               <Icon name={data.secondaryIcon} size={18} />
               {data.secondaryLabel}
             </a>
