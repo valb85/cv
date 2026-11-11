@@ -345,6 +345,10 @@ p { margin: 0; }
 .slot > .block:first-child { margin-top: 0; }
 .page > .slot + .slot > .block:first-child { margin-top: 0; }
 
+/* single-column pages give every block its own slot, so the flow margin
+   between blocks goes on the slot - `.block + .block` never matches there */
+.page:not(.page-grid) > .slot + .slot { margin-top: 2.25rem; }
+
 /* blocks stacked in one column of a multi-column page */
 .page-grid > .slot > .block + .block { margin-top: 1.75rem; }
 
@@ -442,6 +446,9 @@ p { margin: 0; }
   white-space: pre-line;
 }
 
+/* without a subtitle the body is the title's own caption */
+.hero-title + .hero-body { margin-top: 0.6rem; }
+
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -494,7 +501,8 @@ p { margin: 0; }
   list-style: none;
 }
 
-.pills.small .pill { padding: 0.25rem 0.6rem; font-size: var(--step--2); }
+.pills.small { gap: 0.4rem; }
+.pills.small .pill { padding: 0.22rem 0.55rem; font-size: var(--step--2); }
 .pill svg { color: var(--accent); }
 
 /* ============================================================
@@ -795,6 +803,19 @@ figcaption { margin-top: 0.55rem; color: var(--faint); font-size: var(--step--1)
    ============================================================ */
 
 /* 900-1200: keep the sidebar, thin the grids */
+/* past sidebar + --maxw the page stops short of the window, and the photo
+   would end in a hard vertical edge: fade its right side out as well */
+@media (min-width: 1680px) {
+  .hero-media img {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 45%),
+      linear-gradient(to bottom, #000 55%, transparent),
+      linear-gradient(to left, transparent, #000 22%);
+    mask-image: linear-gradient(to right, transparent, #000 45%),
+      linear-gradient(to bottom, #000 55%, transparent),
+      linear-gradient(to left, transparent, #000 22%);
+  }
+}
+
 @media (max-width: 1200px) {
   .grid.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid.cols-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
