@@ -49,7 +49,10 @@ RUN sed -i \
     'ProxyPass /uploads !' \
     'ProxyPass /40x.html !' \
     'ProxyPass /50x.html !' \
-    'ProxyPass / http://cv:3000/ retry=0' \
+    '# upgrade=websocket: `next dev` hydrates only once its HMR websocket' \
+    '# (/_next/hmr) connects. Without it every page renders but stays inert:' \
+    '# no client components, and not-found pages stay blank.' \
+    'ProxyPass / http://cv:3000/ retry=0 upgrade=websocket' \
     'ProxyPassReverse / http://cv:3000/' \
     '' \
     '# setifempty, not set: preserve the value from an upstream proxy (Caddy)' \
