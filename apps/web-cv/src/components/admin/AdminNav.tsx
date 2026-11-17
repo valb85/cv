@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ExternalLink, FileText, FileUser, MessageSquare, Settings } from 'lucide-react';
 
+import { INTERNAL_ADMIN_PATH } from '@/lib/admin-path';
+
 const ITEMS = [
   { suffix: '', label: 'Pages', Icon: FileText, exact: false },
   { suffix: '/cv', label: 'CV', Icon: FileUser, exact: true },
@@ -15,12 +17,24 @@ const isActive = (pathname: string, base: string, href: string, exact: boolean):
   exact ? pathname === href : pathname === href || pathname.startsWith(`${base}/pages`);
 
 /**
+ * usePathname() disagrees between the two renders: in the browser it is the
+ * public ADMIN_PATH URL, but during the server render it is the internal
+ * /admin path the proxy rewrote to. Comparing that against public hrefs
+ * highlighted nothing on the server and the current item in the browser - a
+ * hydration mismatch on every admin page. Mapping /admin back onto `base`
+ * makes both renders agree.
+ */
+const toPublicPath = (pathname: string, base: string): string =>
+  pathname === INTERNAL_ADMIN_PATH || pathname.startsWith(`${INTERNAL_ADMIN_PATH}/`)
+    ? `${base}${pathname.slice(INTERNAL_ADMIN_PATH.length)}`
+    : pathname;
+
+/**
  * `base` is the admin's public path, which only the server can resolve - it
- * comes from the environment. usePathname() reports that same public path,
- * because the rewrite to /admin happens behind the browser's back.
+ * comes from the environment.
  */
 export const AdminNav = ({ base, unread }: { base: string; unread: number }) => {
-  const pathname = usePathname();
+  const pathname = toPublicPath(usePathname(), base);
 
   return (
     <nav className="admin-nav" aria-label="Admin">
