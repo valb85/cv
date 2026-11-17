@@ -356,6 +356,8 @@
 
 .admin-login {
   display: grid;
+  /* one column: .admin's sidebar grid would trap the panel in a 268px track */
+  grid-template-columns: minmax(0, 1fr);
   min-height: 100vh;
   place-items: center;
   padding: 2rem;
@@ -364,6 +366,7 @@
 }
 
 .admin-login .panel { width: min(24rem, 100%); margin: 0; }
+.admin-login .btn { justify-content: center; }
 
 /* ---------- responsive ---------- */
 
