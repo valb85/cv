@@ -268,10 +268,12 @@ sudo tar czf uploads-$(date +%F).tar.gz -C /var/lib/cv uploads
 
 ## Download CV
 
-Not built yet: the home page's **Download CV** button links to `#` until the
-PDF is generated from the site's own content. The plan — print route, headless
-Chromium, cache keyed on the last admin edit — is in
-[docs/cv-generation.md](docs/cv-generation.md).
+The **Download CV** button links to `/cv.pdf`, which headless Chromium renders
+from `/cv-print`. The content comes from **Admin → CV**: personal details,
+summary, experience, education, skills, languages and projects. Until the
+first save, that section is pre-filled from the About, Resume and Projects
+pages. Each save shows up in the next download, and nobody maintains a PDF by
+hand. Details in [docs/cv-generation.md](docs/cv-generation.md).
 
 ## Notes
 

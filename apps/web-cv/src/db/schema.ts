@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 import type { BlockData, BlockType } from '@/lib/blocks';
+import type { CvDocument } from '@/lib/cv-document';
 
 const timestamps = {
   createdAt: integer('created_at', { mode: 'timestamp' })
@@ -55,6 +56,19 @@ export const blocks = sqliteTable(
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+/**
+ * The downloadable CV, edited under Admin -> CV and printed to /cv.pdf. A
+ * single row (id 1) holding the whole document: it is read and saved as one
+ * unit, and its sections are lists the editor rewrites wholesale.
+ */
+export const cvDocument = sqliteTable('cv_document', {
+  id: integer('id').primaryKey(),
+  data: text('data', { mode: 'json' }).$type<CvDocument>().notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),

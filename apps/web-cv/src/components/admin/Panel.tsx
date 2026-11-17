@@ -6,14 +6,17 @@ export const Panel = ({
   icon,
   title,
   action,
+  wide = false,
   children,
 }: {
   icon: string;
   title: string;
   action?: ReactNode;
+  /** Spans both columns of an .editor-grid. */
+  wide?: boolean;
   children: ReactNode;
 }) => (
-  <section className="panel">
+  <section className={wide ? 'panel wide' : 'panel'}>
     <div className="panel-head">
       <span className="panel-icon">
         <Icon name={icon} size={20} />

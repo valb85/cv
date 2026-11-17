@@ -35,6 +35,19 @@ Do not reach for the app's own copy of `better-sqlite3` instead - pnpm nests it
 under `node_modules/.pnpm/better-sqlite3@<version>/`, so a plain `require` from
 `/srv/cv` does not resolve, and the path that does changes on every bump.
 
+A browser for the **Download CV** PDF (`/cv.pdf`, rendered by headless
+Chromium). Use Google's `.deb`, not `apt install chromium-browser`: on Ubuntu
+that is a snap, and snaps do not run under the hardened `cv.service`.
+
+```bash
+wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo apt install -y ./google-chrome-stable_current_amd64.deb   # also adds Google's apt repo for updates
+google-chrome --version
+```
+
+`CHROMIUM_PATH=/usr/bin/google-chrome` in `/etc/cv.env` (step 3) points the app
+at it. Without it the site works and `/cv.pdf` answers 503.
+
 The service account, which owns the app and its data:
 
 ```bash

@@ -47,8 +47,8 @@ export const HeroBlock = ({
           ) : null}
           {data.secondaryLabel ? (
             // `download` on a placeholder href would save the current page as
-            // a file - the attribute only goes on a real target. See
-            // docs/cv-generation.md for the PDF this button is waiting on.
+            // a file - the attribute only goes on a real target such as
+            // /cv.pdf (docs/cv-generation.md).
             <a
               className="btn btn-ghost"
               href={data.secondaryHref || '#'}

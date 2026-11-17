@@ -1,6 +1,7 @@
 FROM node:24-slim AS base
 
 ENV PORT=3000 \
+  CHROMIUM_PATH="/usr/bin/chromium" \
   PNPM_HOME="/usr/local/bin"
 
 EXPOSE 3000
@@ -8,9 +9,15 @@ EXPOSE 3000
 # python3/make/g++ are required to compile better-sqlite3 when no prebuild
 # matches the Node ABI. Both build and runtime stages share this base so the
 # compiled binding always matches the libc it runs against.
+#
+# chromium renders /cv.pdf (src/lib/cv-pdf.ts); the slim image has no fonts at
+# all, so the CV would print in tofu without the font packages.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     ca-certificates \
+    chromium \
+    fonts-dejavu-core \
+    fonts-liberation \
     g++ \
     make \
     nano \

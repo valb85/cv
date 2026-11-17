@@ -6,10 +6,12 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { getDb } from '@/db/client';
-import { blocks, messages, pages, settings, users } from '@/db/schema';
+import { blocks, cvDocument, messages, pages, settings, users } from '@/db/schema';
 import { adminPath } from '@/lib/admin-path';
 import { authenticate, clearSessionCookie, requireUser, setSessionCookie } from '@/lib/auth';
 import { isBlockType, type BlockType } from '@/lib/blocks';
+import { saveCvDocument } from '@/lib/cv';
+import { parseCvForm } from '@/lib/cv-document';
 import { defaultBlockData, parseBlockForm } from '@/lib/block-forms';
 import { clearLoginAttempts, loginLockout, recordFailedLogin } from '@/lib/login-throttle';
 import { hashPassword } from '@/lib/password';
@@ -19,6 +21,7 @@ const num = (data: FormData, key: string): number => Number(data.get(key) ?? 0) 
 const bool = (data: FormData, key: string): boolean => data.get(key) === 'on';
 
 const MIN_PASSWORD_LENGTH = 12;
+
 
 // Apache adds X-Forwarded-For on the way through, so this is the real client
 // rather than 127.0.0.1 for every single request.
@@ -280,6 +283,34 @@ export const updateSettings = async (_: string | null, data: FormData): Promise<
   revalidatePath('/', 'layout');
 
   return 'Settings saved.';
+};
+
+export const updateCv = async (_: string | null, data: FormData): Promise<string> => {
+  await requireUser();
+
+  const cv = parseCvForm(data);
+
+  if (!cv.name) {
+    return 'The name is required; nothing saved.';
+  }
+
+  saveCvDocument(cv);
+  revalidatePath(adminPath('/cv'));
+
+  return 'CV saved. The next download uses it.';
+};
+
+/**
+ * Throws the saved CV away. Until the next save the editor and the PDF show a
+ * fresh draft imported from the site's pages again.
+ */
+export const resetCv = async (): Promise<void> => {
+  await requireUser();
+
+  getDb().delete(cvDocument).run();
+
+  revalidatePath(adminPath('/cv'));
+  redirect(adminPath('/cv'));
 };
 
 export const markMessageRead = async (data: FormData): Promise<void> => {

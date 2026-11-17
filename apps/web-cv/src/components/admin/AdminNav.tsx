@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ExternalLink, FileText, MessageSquare, Settings } from 'lucide-react';
+import { ExternalLink, FileText, FileUser, MessageSquare, Settings } from 'lucide-react';
 
 const ITEMS = [
   { suffix: '', label: 'Pages', Icon: FileText, exact: false },
+  { suffix: '/cv', label: 'CV', Icon: FileUser, exact: true },
   { suffix: '/settings', label: 'Settings', Icon: Settings, exact: true },
   { suffix: '/messages', label: 'Messages', Icon: MessageSquare, exact: true },
 ] as const;

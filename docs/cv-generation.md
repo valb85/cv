@@ -1,102 +1,114 @@
-# CV download — generation plan
+# CV download
 
-**Status:** not built. The **Download CV** button on the home page links to
-`#` and does nothing.
+The **Download CV** button on `/developer` links to `/cv.pdf`. The PDF is
+generated from the CV edited under **Admin → CV**, so the next download always
+shows the latest save. No PDF is kept by hand in the repo or in `/uploads`.
 
-## Why it is a placeholder
+## How it works
 
-The hero's secondary button pointed at `/cv.pdf`, a file that was never
-produced. The request fell through to the site's 404 page, and because the
-link carried a `download` attribute the browser saved that HTML page as the
-"CV".
+```
+Admin → CV  (src/app/admin/(protected)/cv/page.tsx, CvFields.tsx)
+  └─ updateCv / resetCv  (src/app/admin/actions.ts)
+       └─ cv_document table, one row (id 1), the whole CV as JSON
 
-For now:
+/cv.pdf  (src/app/cv.pdf/route.ts)
+  └─ getCvPdf()  (src/lib/cv-pdf.ts)
+       ├─ cached?  → serve from memory
+       └─ headless Chromium → http://<own host>:3000/cv-print → page.pdf(A4)
+            └─ /cv-print  (src/app/cv-print/page.tsx + cv-print.css)
+                 └─ getCvDocument()  (src/lib/cv.ts)
+```
 
-- the hero block's `secondaryHref` is `#` (home page, editable in the admin
-  under the hero block);
-- `HeroBlock` only adds `download` when the href is a real target — a `#` or
-  empty href renders a plain link, so a placeholder can never save the page.
+### The CV document
 
-**Production still holds `/cv.pdf`** in its database. Change it to `#` in the
-admin (Pages → Home → hero block → secondary link) until this is built.
+`CvDocument` (`src/lib/cv-document.ts`) is the CV as structured data, kept
+apart from the site's page blocks because a CV needs things the marketing
+pages don't have, such as company names, a phone number and bullet points:
 
-## Goal
+- personal details: name, headline, e-mail, phone, location, website,
+  LinkedIn, GitHub;
+- summary (blank line = new paragraph) and interests;
+- experience: role, company, location, period, description, tech;
+- education: degree, school, period, description;
+- skill groups, languages, projects.
 
-A PDF CV that is generated from the same content as the site, so it can never
-drift from it: edit a timeline entry in the admin, and the next download
-already reflects it. No hand-maintained PDF in the repo or in `/uploads`.
+Descriptions are free text, and lines starting with `- ` print as bullet
+points. Empty fields and sections are left off the PDF. Lists are printed in
+the order they are entered.
 
-## Proposed design
+**Before the first save** there is no row, and `importCvFromSite()` builds a
+draft from the site: identity from settings, the summary from About's hero,
+experience and education from Resume's timelines, skills from Resume's pill
+groups, languages and interests from About, and projects from Projects. The
+editor opens with that draft and the PDF prints it, so the button works on a
+fresh install. **Re-import from site** in the editor deletes the saved row to
+go back to the imported draft.
 
-### 1. Source: a print route
+### Source: `/cv-print`
 
-Add `/cv/print`: a page that renders the CV-relevant content — identity from
-`settings`, then the `about`, `resume` and `projects` pages' blocks — through
-the existing block renderers, without the sidebar, in a single A4 column.
+A layout of its own, not the site's blocks: a header with name, headline and
+contacts, then Profile, Experience, Skills, Projects, Education, and Languages
+next to Interests, in one A4 column with the dates in a narrow left column.
+The palette is light on screen too, so the browser preview matches the PDF.
 
-`globals.css` already has an `@media print` section (white background, sidebar
-and contact form hidden, cards not split across pages). The print route builds
-on that rather than on a second stylesheet. It is also how the PDF gets
-designed and checked: open `/cv/print` and use the browser's print preview.
+The page is the design tool: open `/cv-print` (or **Preview** in the editor)
+and use print preview. It is `noindex` and not linked from the site.
 
-### 2. Rendering: headless Chromium
+### Rendering: headless Chromium
 
-Add a route handler at `src/app/cv.pdf/route.ts` that loads `/cv/print` in
-headless Chromium (`puppeteer-core`) and calls `page.pdf({ format: 'A4',
-printBackground: true })`.
+`puppeteer-core` launches the browser at `CHROMIUM_PATH` and loads
+`/cv-print` from this Node process directly, not through Apache, so there is
+no TLS or vhost in the way. The address follows `HOSTNAME`, which is the
+address the standalone server binds to: `127.0.0.1` under systemd, the
+container ID inside Docker.
 
-Chromium is chosen over a PDF library because it renders the real site: the
-same components, fonts and tokens, so there is one layout to maintain.
+While it renders:
 
-| | Chromium (`puppeteer-core`) | `@react-pdf/renderer` |
-|---|---|---|
-| Layout | reuses the site's components and CSS | a second, parallel layout in PDF primitives |
-| Image size | +~300 MB (`chromium` apt package) | +~10 MB |
-| Memory per render | ~150 MB, for a few seconds | small |
-| Fidelity to the site | exact | approximate |
+- requests off that origin are aborted. The blocks hold admin-authored HTML,
+  and the server should not fetch arbitrary URLs because of it;
+- `/uploads/*` is answered from `UPLOAD_DIR`, because Apache normally serves
+  it and this render bypasses Apache;
+- Chromium runs with `--no-sandbox`. Neither the container nor the hardened
+  systemd unit gives it the namespaces its sandbox needs, and it only ever
+  loads our own page.
 
-Given one author and an occasional download, the cost of Chromium is paid
-rarely, and avoiding a second layout is worth more.
+A render takes about 1.5 s.
 
-### 3. Caching
+### Caching
 
-Generating on every click is wasteful. Cache the PDF in the data volume:
+The PDF is kept in memory together with a version: a hash of the CV document
+and the build ID, so a save in the admin and a deploy that changes the layout
+both re-render it. Until the first save the document is the import, so site
+edits change it too.
 
-- path: `${DATABASE_PATH%/*}/cv-<version>.pdf`;
-- `<version>` = the newest `updated_at` across `pages`, `blocks` and
-  `settings` — any admin save produces a new version;
-- on request: serve the cached file if it exists for the current version,
-  otherwise render, write, delete older versions, then serve;
-- headers: `Content-Type: application/pdf`,
-  `Content-Disposition: attachment; filename="Victor-Albulescu-CV.pdf"`.
+- The same version is served from memory, in about 10 ms.
+- Concurrent requests for a new version share one render.
+- A failed render is not cached, so the next request tries again, and the
+  request gets a plain-text 503 rather than an HTML page that the browser
+  would save as the "CV".
+- `next dev` skips the cache, so CSS edits show up on the next download.
 
-Concurrent first requests for a new version should share one render (an
-in-process promise keyed by version), not start several browsers.
+### The button
 
-### 4. Wiring
+`HeroBlock` only adds `download` when the href is a real target, so a `#`
+placeholder never saves the page. Migration `0004_cv_download_link` points an
+existing "Download CV" hero button that is still on `#`, empty, or `/cv.pdf`
+at `/cv.pdf`. A link set to anything else in the admin is left alone.
 
-- Set the hero's `secondaryHref` back to `/cv.pdf` (seed and admin). The
-  `download` attribute returns automatically for a real href.
-- `proxy.ts` already lets `/cv.pdf` through to Next; Apache proxies everything
-  that is not `/uploads` or an error page, so no proxy change is needed.
+## Install / deploy
 
-## Install / deploy impact
+- **Docker:** `Dockerfile.base` installs `chromium`, `fonts-dejavu-core` and
+  `fonts-liberation` (the slim image has no fonts at all) and sets
+  `CHROMIUM_PATH=/usr/bin/chromium`. This adds roughly 300 MB to the image.
+- **Non-Docker production** (`deploy/`): install Google Chrome from its `.deb`
+  and set `CHROMIUM_PATH=/usr/bin/google-chrome` in `/etc/cv.env`. See
+  `deploy/DEPLOY.md` step 1. Ubuntu's `chromium-browser` is a snap and does not
+  run under the hardened unit. Chromium's profile goes to the service's
+  private `/tmp`, because its home directory is read-only.
+- Without `CHROMIUM_PATH`, the rest of the site works and `/cv.pdf` answers
+  503.
 
-- **Docker:** add `chromium` (and `fonts-dejavu-core` or the site's font
-  packages) to `apps/web-cv/Dockerfile.base`; point `puppeteer-core` at
-  `/usr/bin/chromium` via a `CHROMIUM_PATH` env var.
-- **Non-Docker production** (`deploy/`): the server needs the `chromium`
-  package too; add it to `deploy/DEPLOY.md` and set `CHROMIUM_PATH` in
-  `/etc/cv.env`.
-- Chromium inside a container needs `--no-sandbox` unless the container is
-  given a seccomp profile; it only ever loads our own `/cv/print`, never a
-  user-supplied URL.
+## Possible next steps
 
-## Open questions
-
-- Which pages go into the CV — all of `about`, `resume`, `projects`, or a
-  curated subset? A per-page "include in CV" toggle in the admin would make it
-  editable instead of hard-coded.
-- Should the contact details in the PDF include the e-mail address in clear
-  text (fine for a CV you hand out) even though the site could obscure it?
-- One language, or a per-language CV later?
+- Reordering entries in the editor (today: printed as entered).
+- A per-language CV would need one document per language.
