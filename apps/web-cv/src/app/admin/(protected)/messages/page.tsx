@@ -1,7 +1,8 @@
 import { desc } from 'drizzle-orm';
 
-import { deleteMessage, markMessageRead } from '@/app/admin/actions';
+import { deleteAllMessages, deleteMessage, markMessageRead } from '@/app/admin/actions';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { ConfirmButton } from '@/components/admin/ConfirmButton';
 import { getDb } from '@/db/client';
 import { messages } from '@/db/schema';
 
@@ -9,10 +10,27 @@ export const dynamic = 'force-dynamic';
 
 export default function MessagesPage() {
   const all = getDb().select().from(messages).orderBy(desc(messages.createdAt)).all();
+  const unread = all.filter((message) => !message.readAt).length;
 
   return (
     <>
       <AdminHeader eyebrow="Inbox" title="Messages" />
+
+      {all.length > 0 ? (
+        <form action={deleteAllMessages} className="inbox-tools">
+          <span className="hint">
+            {all.length} {all.length === 1 ? 'message' : 'messages'}, {unread} unread
+          </span>
+          {/* Newest id on screen: anything that arrives after this page loaded is kept. */}
+          <input type="hidden" name="upToId" value={Math.max(...all.map((message) => message.id))} />
+          <ConfirmButton
+            className="btn btn-ghost danger"
+            message={`Delete all ${all.length} messages? This cannot be undone.`}
+          >
+            Delete all
+          </ConfirmButton>
+        </form>
+      ) : null}
 
       {all.length === 0 ? (
         <section className="panel">

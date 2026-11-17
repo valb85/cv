@@ -1,6 +1,6 @@
 'use server';
 
-import { and, eq, gt, lt, sql } from 'drizzle-orm';
+import { and, eq, gt, lt, lte, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -369,4 +369,22 @@ export const deleteMessage = async (data: FormData): Promise<void> => {
   getDb().delete(messages).where(eq(messages.id, num(data, 'id'))).run();
 
   revalidatePath(adminPath('/messages'));
+};
+
+/**
+ * Empties the inbox - for clearing out a spam run. Bounded by the newest id
+ * the page showed (`upToId`), so a message that arrives between loading the
+ * page and confirming is kept rather than deleted unseen.
+ */
+export const deleteAllMessages = async (data: FormData): Promise<void> => {
+  await requireUser();
+
+  const upToId = num(data, 'upToId');
+
+  if (upToId > 0) {
+    getDb().delete(messages).where(lte(messages.id, upToId)).run();
+  }
+
+  revalidatePath(adminPath('/messages'));
+  revalidatePath('/', 'layout');
 };

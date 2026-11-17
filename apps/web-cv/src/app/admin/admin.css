@@ -487,5 +487,24 @@
 }
 
 .import-form .action-bar { margin-top: 1rem; padding: 0; background: none; border: 0; }
+
+/* ---------- inbox ---------- */
+
+.inbox-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+/* a real button, unlike the link-style per-message "delete" */
+.admin .inbox-tools .btn.danger {
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(255, 107, 94, 0.45);
+  border-radius: var(--r-sm);
+}
+
+.admin .inbox-tools .btn.danger:hover { background: rgba(255, 107, 94, 0.1); }
 .export-row { margin-top: 0.85rem; }
 form.editor-grid + .panel { margin-top: 1.25rem; }
