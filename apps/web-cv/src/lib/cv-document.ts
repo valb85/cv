@@ -170,3 +170,173 @@ export const normalizeCv = (stored: Partial<CvDocument> | null | undefined): CvD
   ...EMPTY_CV,
   ...stored,
 });
+
+/* ------------------------------------------------------------------------ */
+/* Export / import                                                           */
+/* ------------------------------------------------------------------------ */
+
+/** Marks a file as a CV export, so an unrelated JSON file is refused. */
+export const CV_EXPORT_FORMAT = 'cv-document';
+export const CV_EXPORT_VERSION = 1;
+
+export type CvExport = {
+  format: typeof CV_EXPORT_FORMAT;
+  version: typeof CV_EXPORT_VERSION;
+  exportedAt: string;
+  cv: CvDocument;
+};
+
+export const toCvExport = (cv: CvDocument): CvExport => ({
+  format: CV_EXPORT_FORMAT,
+  version: CV_EXPORT_VERSION,
+  exportedAt: new Date().toISOString(),
+  cv,
+});
+
+const MAX_TEXT = 10_000;
+const MAX_ITEMS = 100;
+
+class ImportError extends Error {}
+
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** A string field: missing means empty, anything that is not a string is refused. */
+const textAt = (record: Record<string, unknown>, key: string, where: string): string => {
+  const value = record[key];
+
+  if (value === undefined || value === null) {
+    return '';
+  }
+
+  if (typeof value !== 'string') {
+    throw new ImportError(`${where}.${key} must be text.`);
+  }
+
+  if (value.length > MAX_TEXT) {
+    throw new ImportError(`${where}.${key} is longer than ${MAX_TEXT} characters.`);
+  }
+
+  return value.trim().replace(/\r\n?/g, '\n');
+};
+
+const listAt = (record: Record<string, unknown>, key: string, where: string): unknown[] => {
+  const value = record[key];
+
+  if (value === undefined || value === null) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new ImportError(`${where}.${key} must be a list.`);
+  }
+
+  if (value.length > MAX_ITEMS) {
+    throw new ImportError(`${where}.${key} has more than ${MAX_ITEMS} entries.`);
+  }
+
+  return value;
+};
+
+const stringsAt = (record: Record<string, unknown>, key: string, where: string): string[] =>
+  listAt(record, key, where).map((item, i) => {
+    if (typeof item !== 'string' || item.length > MAX_TEXT) {
+      throw new ImportError(`${where}.${key}[${i}] must be text.`);
+    }
+
+    return item.trim();
+  }).filter(Boolean);
+
+const rowsAt = <T>(
+  record: Record<string, unknown>,
+  key: string,
+  read: (row: Record<string, unknown>, where: string) => T,
+): T[] =>
+  listAt(record, key, 'cv').map((row, i) => {
+    const where = `cv.${key}[${i}]`;
+
+    if (!isObject(row)) {
+      throw new ImportError(`${where} must be an object.`);
+    }
+
+    return read(row, where);
+  });
+
+/**
+ * Reads an uploaded export back into a CvDocument. Every field is checked and
+ * rebuilt from scratch, so unknown keys are dropped and a hand-edited file
+ * cannot smuggle a wrong shape into the database. Rows without their key field
+ * are dropped, the same rule the editor applies.
+ *
+ * Returns the document, or a message saying what is wrong with the file.
+ */
+export const parseCvExport = (raw: unknown): CvDocument | string => {
+  try {
+    if (!isObject(raw) || raw.format !== CV_EXPORT_FORMAT) {
+      throw new ImportError('This is not a CV export file.');
+    }
+
+    if (raw.version !== CV_EXPORT_VERSION) {
+      throw new ImportError(`Unsupported export version ${JSON.stringify(raw.version)}.`);
+    }
+
+    const cv = raw.cv;
+
+    if (!isObject(cv)) {
+      throw new ImportError('The file has no CV in it.');
+    }
+
+    const doc: CvDocument = {
+      name: textAt(cv, 'name', 'cv'),
+      headline: textAt(cv, 'headline', 'cv'),
+      email: textAt(cv, 'email', 'cv'),
+      phone: textAt(cv, 'phone', 'cv'),
+      location: textAt(cv, 'location', 'cv'),
+      website: textAt(cv, 'website', 'cv'),
+      linkedin: textAt(cv, 'linkedin', 'cv'),
+      github: textAt(cv, 'github', 'cv'),
+      summary: textAt(cv, 'summary', 'cv'),
+      experience: rowsAt(cv, 'experience', (row, where) => ({
+        role: textAt(row, 'role', where),
+        company: textAt(row, 'company', where),
+        location: textAt(row, 'location', where),
+        period: textAt(row, 'period', where),
+        description: textAt(row, 'description', where),
+        tech: stringsAt(row, 'tech', where),
+      })).filter((entry) => entry.role),
+      education: rowsAt(cv, 'education', (row, where) => ({
+        degree: textAt(row, 'degree', where),
+        school: textAt(row, 'school', where),
+        period: textAt(row, 'period', where),
+        description: textAt(row, 'description', where),
+      })).filter((entry) => entry.degree),
+      skills: rowsAt(cv, 'skills', (row, where) => ({
+        group: textAt(row, 'group', where),
+        items: stringsAt(row, 'items', where),
+      })).filter((entry) => entry.group),
+      languages: rowsAt(cv, 'languages', (row, where) => ({
+        name: textAt(row, 'name', where),
+        level: textAt(row, 'level', where),
+      })).filter((entry) => entry.name),
+      projects: rowsAt(cv, 'projects', (row, where) => ({
+        name: textAt(row, 'name', where),
+        description: textAt(row, 'description', where),
+        tech: stringsAt(row, 'tech', where),
+        link: textAt(row, 'link', where),
+      })).filter((entry) => entry.name),
+      interests: stringsAt(cv, 'interests', 'cv'),
+    };
+
+    if (!doc.name) {
+      throw new ImportError('The CV in the file has no name.');
+    }
+
+    return doc;
+  } catch (error) {
+    if (error instanceof ImportError) {
+      return error.message;
+    }
+
+    throw error;
+  }
+};

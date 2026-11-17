@@ -474,3 +474,18 @@
   color: var(--muted);
   font-size: var(--step--1);
 }
+
+/* ---------- CV export / import ---------- */
+
+.import-form { margin-top: 1rem; }
+
+.import-form > label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: var(--step--1);
+}
+
+.import-form .action-bar { margin-top: 1rem; padding: 0; background: none; border: 0; }
+.export-row { margin-top: 0.85rem; }
+form.editor-grid + .panel { margin-top: 1.25rem; }

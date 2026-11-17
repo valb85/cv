@@ -11,7 +11,7 @@ import { adminPath } from '@/lib/admin-path';
 import { authenticate, clearSessionCookie, requireUser, setSessionCookie } from '@/lib/auth';
 import { isBlockType, type BlockType } from '@/lib/blocks';
 import { saveCvDocument } from '@/lib/cv';
-import { parseCvForm } from '@/lib/cv-document';
+import { parseCvExport, parseCvForm } from '@/lib/cv-document';
 import { defaultBlockData, parseBlockForm } from '@/lib/block-forms';
 import { clearLoginAttempts, loginLockout, recordFailedLogin } from '@/lib/login-throttle';
 import { hashPassword } from '@/lib/password';
@@ -311,6 +311,47 @@ export const resetCv = async (): Promise<void> => {
 
   revalidatePath(adminPath('/cv'));
   redirect(adminPath('/cv'));
+};
+
+const MAX_IMPORT_BYTES = 512 * 1024;
+
+/**
+ * Replaces the saved CV with an uploaded export (see /cv/export). The file is
+ * validated field by field before anything is written; on any problem the
+ * saved CV is left untouched and the reason is shown.
+ */
+export const importCv = async (_: string | null, data: FormData): Promise<string> => {
+  await requireUser();
+
+  const file = data.get('file');
+
+  if (!(file instanceof File) || file.size === 0) {
+    return 'Choose a CV export (.json) to import.';
+  }
+
+  if (file.size > MAX_IMPORT_BYTES) {
+    return 'That file is too large to be a CV export.';
+  }
+
+  let raw: unknown;
+
+  try {
+    raw = JSON.parse(await file.text());
+  } catch {
+    return 'That file is not valid JSON.';
+  }
+
+  const cv = parseCvExport(raw);
+
+  if (typeof cv === 'string') {
+    return `Nothing imported: ${cv}`;
+  }
+
+  saveCvDocument(cv);
+
+  // The marker remounts the editor: its fields are uncontrolled, so a plain
+  // re-render would keep showing the values from before the import.
+  redirect(adminPath(`/cv?imported=${Date.now()}`));
 };
 
 export const markMessageRead = async (data: FormData): Promise<void> => {

@@ -46,6 +46,28 @@ editor opens with that draft and the PDF prints it, so the button works on a
 fresh install. **Re-import from site** in the editor deletes the saved row to
 go back to the imported draft.
 
+### Export / import
+
+**Export JSON** on the CV page downloads the CV as it stands, saved or draft,
+from `<ADMIN_PATH>/cv/export`:
+
+```json
+{ "format": "cv-document", "version": 1, "exportedAt": "…", "cv": { … } }
+```
+
+**Import JSON** replaces the saved CV with such a file. This is how a CV
+edited locally gets to production without copying the database. The import
+(`parseCvExport` in `src/lib/cv-document.ts`) rebuilds the document field by
+field:
+- it refuses a file of another format or version, wrong types, or more than
+  512 KB, 100 entries per list or 10,000 characters per field;
+- it drops unknown keys and rows without their key field;
+- on any error nothing is written, and the editor says what was wrong.
+
+The export route checks the session itself, because route handlers don't run
+the admin layout's login check. It answers 404 when signed out, like any other
+admin URL.
+
 ### Source: `/cv-print`
 
 A layout of its own, not the site's blocks: a header with name, headline and
@@ -112,4 +134,5 @@ at `/cv.pdf`. A link set to anything else in the admin is left alone.
 
 ## Possible next steps
 
-- A per-language CV would need one document per language.
+- A per-language CV would need one document per language (the export format
+  carries a version number for changes like that).
