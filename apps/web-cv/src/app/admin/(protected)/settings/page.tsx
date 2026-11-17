@@ -1,7 +1,9 @@
-import { changePassword, updateSettings } from '@/app/admin/actions';
+import { changePassword, updateContactSettings, updateSettings } from '@/app/admin/actions';
 import { AdminForm } from '@/components/admin/AdminForm';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Panel } from '@/components/admin/Panel';
+import { turnstileSiteKey } from '@/lib/contact-guard';
+import { CONTACT_SETTING_FIELDS, getContactSettings } from '@/lib/contact-settings';
 import { getAllSettings } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
@@ -35,6 +37,7 @@ const GROUPS: { icon: string; title: string; fields: Field[] }[] = [
 
 export default function SettingsPage() {
   const current = getAllSettings();
+  const contact = getContactSettings(current);
 
   return (
     <>
@@ -53,6 +56,43 @@ export default function SettingsPage() {
           </Panel>
         ))}
 
+      </AdminForm>
+
+      <AdminForm action={updateContactSettings} className="editor-grid" submitLabel="Save contact limits">
+        <Panel icon="mail" title="Contact form" wide>
+          <p className="hint contact-limits-intro">
+            Limits for the contact form, per sender IP. They apply to the next message, no restart
+            needed. Messages already in the inbox count towards the limits, so Delete all in Messages
+            also resets them.
+          </p>
+          <div className="pair cv-pair">
+            {CONTACT_SETTING_FIELDS.map((field) => {
+              const value = contact[field.prop];
+
+              return (
+                <label key={field.key}>
+                  {field.label}
+                  <input
+                    name={field.key}
+                    type="number"
+                    inputMode="numeric"
+                    min={field.min}
+                    max={field.max}
+                    step={1}
+                    required={!field.optional}
+                    defaultValue={value === null ? '' : value}
+                  />
+                  <span className="hint">{field.hint}</span>
+                </label>
+              );
+            })}
+          </div>
+          <p className="hint">
+            Human check (Cloudflare Turnstile):{' '}
+            <strong>{turnstileSiteKey() ? 'on' : 'off'}</strong>. It is switched on with
+            TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY on the server, not here.
+          </p>
+        </Panel>
       </AdminForm>
 
       <AdminForm action={changePassword} className="editor-grid" submitLabel="Change password">

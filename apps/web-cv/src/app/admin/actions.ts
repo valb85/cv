@@ -10,6 +10,7 @@ import { blocks, cvDocument, messages, pages, settings, users } from '@/db/schem
 import { adminPath } from '@/lib/admin-path';
 import { authenticate, clearSessionCookie, requireUser, setSessionCookie } from '@/lib/auth';
 import { clientIp } from '@/lib/client-ip';
+import { CONTACT_SETTING_FIELDS, parseContactSetting } from '@/lib/contact-settings';
 import { isBlockType, type BlockType } from '@/lib/blocks';
 import { saveCvDocument } from '@/lib/cv';
 import { parseCvExport, parseCvForm } from '@/lib/cv-document';
@@ -349,6 +350,44 @@ export const importCv = async (_: string | null, data: FormData): Promise<string
   // The marker remounts the editor: its fields are uncontrolled, so a plain
   // re-render would keep showing the values from before the import.
   redirect(adminPath(`/cv?imported=${Date.now()}`));
+};
+
+/**
+ * Saves the contact form spam limits. All fields are checked first and
+ * nothing is written unless every one is valid, so a typo cannot leave the
+ * form half-configured.
+ */
+export const updateContactSettings = async (_: string | null, data: FormData): Promise<string> => {
+  await requireUser();
+
+  const values: [string, string][] = [];
+  const errors: string[] = [];
+
+  for (const field of CONTACT_SETTING_FIELDS) {
+    const parsed = parseContactSetting(field, String(data.get(field.key) ?? ''));
+
+    if (parsed.ok) {
+      values.push([field.key, parsed.value]);
+    } else {
+      errors.push(parsed.error);
+    }
+  }
+
+  if (errors.length > 0) {
+    return `Not saved. ${errors.join(' ')}`;
+  }
+
+  for (const [key, value] of values) {
+    getDb()
+      .insert(settings)
+      .values({ key, value })
+      .onConflictDoUpdate({ target: settings.key, set: { value, updatedAt: new Date() } })
+      .run();
+  }
+
+  revalidatePath(adminPath('/settings'));
+
+  return 'Contact form limits saved. They apply to the next message.';
 };
 
 export const markMessageRead = async (data: FormData): Promise<void> => {

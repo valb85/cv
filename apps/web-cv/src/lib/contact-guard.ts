@@ -4,6 +4,7 @@ import { and, eq, gt, sql } from 'drizzle-orm';
 
 import { getDb } from '@/db/client';
 import { messages } from '@/db/schema';
+import type { ContactSettings } from '@/lib/contact-settings';
 
 /**
  * Layers that keep the contact form for people. Each one stops a different
@@ -11,8 +12,8 @@ import { messages } from '@/db/schema';
  *
  * 1. form token  - signed when the page renders, so a script posting straight
  *                  to /api/contact without loading the page is refused;
- * 2. fill time   - a token younger than MIN_FILL_MS means the form was filled
- *                  faster than anyone types;
+ * 2. fill time   - a token younger than the minimum fill time means the form
+ *                  was filled faster than anyone types;
  * 3. rate limit  - per IP, counted from stored messages so it survives restarts;
  * 4. link cap    - link-stuffed messages are the bulk of contact-form spam;
  * 5. Turnstile   - Cloudflare's check that a real browser with a person at it
@@ -23,15 +24,11 @@ import { messages } from '@/db/schema';
 
 const env = process.env as Record<string, string | undefined>;
 
-const MIN_FILL_MS = 3_000;
+// The tunable limits (rate limits, fill time, links) live in the settings
+// table - Admin -> Settings -> Contact form, see src/lib/contact-settings.ts.
+// The token lifetime is not a spam knob, so it stays fixed here.
 const MAX_TOKEN_AGE_MS = 2 * 60 * 60 * 1000;
-
-export const RATE_LIMITS = [
-  { windowMs: 10 * 60 * 1000, max: 3 },
-  { windowMs: 24 * 60 * 60 * 1000, max: 10 },
-] as const;
-
-export const MAX_LINKS = 2;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /* ---------- 1 + 2: signed form token ---------- */
 
@@ -57,7 +54,7 @@ export const issueFormToken = (): string => {
 
 export type TokenCheck = 'ok' | 'invalid' | 'too-fast' | 'expired';
 
-export const checkFormToken = (token: string, now = Date.now()): TokenCheck => {
+export const checkFormToken = (token: string, minFillSeconds: number, now = Date.now()): TokenCheck => {
   const parts = token.split('.');
 
   if (parts.length !== 3) {
@@ -78,7 +75,7 @@ export const checkFormToken = (token: string, now = Date.now()): TokenCheck => {
     return 'invalid';
   }
 
-  if (age < MIN_FILL_MS) {
+  if (age < minFillSeconds * 1000) {
     return 'too-fast';
   }
 
@@ -87,9 +84,19 @@ export const checkFormToken = (token: string, now = Date.now()): TokenCheck => {
 
 /* ---------- 3: rate limit ---------- */
 
-/** True when this IP has already sent as many messages as a window allows. */
-export const isRateLimited = (ip: string, now = Date.now()): boolean =>
-  RATE_LIMITS.some(({ windowMs, max }) => {
+/**
+ * True when this IP has already sent as many messages as a window allows.
+ * A window whose max is 0 is switched off.
+ */
+export const isRateLimited = (ip: string, limits: ContactSettings, now = Date.now()): boolean =>
+  [
+    { windowMs: limits.shortWindowMinutes * 60 * 1000, max: limits.shortMax },
+    { windowMs: DAY_MS, max: limits.dailyMax },
+  ].some(({ windowMs, max }) => {
+    if (max <= 0) {
+      return false;
+    }
+
     const since = new Date(now - windowMs);
     const row = getDb()
       .select({ count: sql<number>`count(*)` })

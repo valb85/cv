@@ -2,7 +2,8 @@ import { getDb } from '@/db/client';
 import { messages } from '@/db/schema';
 import { clientIp } from '@/lib/client-ip';
 import { validateContact } from '@/lib/contact';
-import { checkFormToken, countLinks, isRateLimited, MAX_LINKS, verifyTurnstile } from '@/lib/contact-guard';
+import { checkFormToken, countLinks, isRateLimited, verifyTurnstile } from '@/lib/contact-guard';
+import { getContactSettings } from '@/lib/contact-settings';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +56,10 @@ export async function POST(request: Request): Promise<Response> {
     return result.error === 'spam' ? respond(request, true) : respond(request, false, result.error);
   }
 
-  switch (checkFormToken(field(data, 'form_token'))) {
+  // Read per submission, so a change under Admin -> Settings applies at once.
+  const limits = getContactSettings();
+
+  switch (checkFormToken(field(data, 'form_token'), limits.minFillSeconds)) {
     case 'ok':
       break;
     case 'too-fast':
@@ -68,12 +72,18 @@ export async function POST(request: Request): Promise<Response> {
 
   const ip = clientIp(request.headers);
 
-  if (isRateLimited(ip)) {
+  if (isRateLimited(ip, limits)) {
     return respond(request, false, 'Too many messages from your network. Please try again later.');
   }
 
-  if (countLinks(result.value.name, result.value.body) > MAX_LINKS) {
-    return respond(request, false, `Please include at most ${MAX_LINKS} links in your message.`);
+  if (limits.maxLinks !== null && countLinks(result.value.name, result.value.body) > limits.maxLinks) {
+    return respond(
+      request,
+      false,
+      limits.maxLinks === 0
+        ? 'Please send your message without links.'
+        : `Please include at most ${limits.maxLinks} ${limits.maxLinks === 1 ? 'link' : 'links'} in your message.`,
+    );
   }
 
   switch (await verifyTurnstile(field(data, 'cf-turnstile-response'), ip)) {

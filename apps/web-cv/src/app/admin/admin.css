@@ -230,6 +230,9 @@
 .cv-pair { margin-bottom: 0.75rem; }
 .cv-pair > label {
   display: grid;
+  /* top-aligned: a longer hint in the neighbouring column must not stretch
+     this field's input to match the row height */
+  align-content: start;
   gap: 0.4rem;
   color: var(--muted);
   font-size: var(--step--1);
@@ -506,5 +509,9 @@
 }
 
 .admin .inbox-tools .btn.danger:hover { background: rgba(255, 107, 94, 0.1); }
+
+/* ---------- settings: contact form limits ---------- */
+
+.contact-limits-intro { margin-bottom: 1.1rem; }
 .export-row { margin-top: 0.85rem; }
 form.editor-grid + .panel { margin-top: 1.25rem; }
