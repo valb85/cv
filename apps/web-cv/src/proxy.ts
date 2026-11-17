@@ -40,7 +40,13 @@ const notFound = (request: NextRequest): NextResponse =>
 export const proxy = (request: NextRequest): NextResponse => {
   const { pathname } = request.nextUrl;
 
-  if (request.headers.get(REENTRY_HEADER) === REENTRY_TOKEN) {
+  // The marker only vouches for a request already on the internal path. A
+  // server action that calls redirect() renders its target with a second
+  // request carrying a copy of the action request's headers - marker included
+  // - but for the public path. Trusting the marker there skipped the rewrite,
+  // so every admin redirect (login, logout, create/delete page, CV reset)
+  // rendered the 404 page.
+  if (request.headers.get(REENTRY_HEADER) === REENTRY_TOKEN && under(pathname, INTERNAL_ADMIN_PATH)) {
     return NextResponse.next();
   }
 
