@@ -65,6 +65,7 @@ export const CvFields = ({ cv }: { cv: CvDocument }) => (
 
     <Panel icon="briefcase" title="Experience" wide>
       <RepeatingRows
+        reorderable
         className="cv-rows"
         initialCount={cv.experience.length + 1}
         addLabel="+ add position"
@@ -85,12 +86,13 @@ export const CvFields = ({ cv }: { cv: CvDocument }) => (
         )}
       />
       <span className="hint">
-        Printed in this order, so put the latest position first. Clear the role to remove a position.
+        Printed in this order; use the arrows to move a position. Clear the role to remove it.
       </span>
     </Panel>
 
     <Panel icon="graduation" title="Education" wide>
       <RepeatingRows
+        reorderable
         className="cv-rows"
         initialCount={cv.education.length + 1}
         addLabel="+ add education"
@@ -108,6 +110,7 @@ export const CvFields = ({ cv }: { cv: CvDocument }) => (
 
     <Panel icon="code" title="Skills">
       <RepeatingRows
+        reorderable
         initialCount={cv.skills.length + 1}
         addLabel="+ add skill group"
         renderRow={(i) => (
@@ -122,6 +125,7 @@ export const CvFields = ({ cv }: { cv: CvDocument }) => (
 
     <Panel icon="languages" title="Languages">
       <RepeatingRows
+        reorderable
         initialCount={cv.languages.length + 1}
         addLabel="+ add language"
         renderRow={(i) => (
@@ -136,6 +140,7 @@ export const CvFields = ({ cv }: { cv: CvDocument }) => (
 
     <Panel icon="rocket" title="Projects" wide>
       <RepeatingRows
+        reorderable
         className="cv-rows"
         initialCount={cv.projects.length + 1}
         addLabel="+ add project"

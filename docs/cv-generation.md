@@ -33,8 +33,10 @@ pages don't have, such as company names, a phone number and bullet points:
 - skill groups, languages, projects.
 
 Descriptions are free text, and lines starting with `- ` print as bullet
-points. Empty fields and sections are left off the PDF. Lists are printed in
-the order they are entered.
+points. Empty fields and sections are left off the PDF. Every list prints in
+the order shown in the editor; the up/down arrows on each row reorder it
+(`RepeatingRows` with `reorderable`), and the new order is saved on the next
+**Save CV**.
 
 **Before the first save** there is no row, and `importCvFromSite()` builds a
 draft from the site: identity from settings, the summary from About's hero,
@@ -110,5 +112,4 @@ at `/cv.pdf`. A link set to anything else in the admin is left alone.
 
 ## Possible next steps
 
-- Reordering entries in the editor (today: printed as entered).
 - A per-language CV would need one document per language.
