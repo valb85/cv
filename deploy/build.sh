@@ -46,6 +46,11 @@ cp -r .next/standalone/. "$TARGET/"
 cp -r .next/static       "$TARGET/.next/static"
 cp -r public             "$TARGET/public"
 cp -r drizzle            "$TARGET/drizzle"
+# next/image caches resized images here. The standalone output does not ship
+# the folder, and cv.service makes the rest of /srv/cv read-only, so it has to
+# exist before the service starts (cv.service: ReadWritePaths). A redeploy
+# replaces .next and so starts the cache over, which is what a new build wants.
+mkdir -p "$TARGET/.next/cache"
 
 echo
 echo "assembled. next:"

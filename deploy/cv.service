@@ -28,8 +28,12 @@ SuccessExitStatus=143
 # outside /srv/cv so a redeploy overwrites the app without touching the data.
 StateDirectory=cv
 
-# The app never writes inside its own directory, so everything else is
-# read-only to it.
+# Everything else is read-only to the app, except one folder: next/image
+# caches resized images in .next/cache (created by deploy/build.sh). Without
+# it every image request is resized again and logs "Failed to write image to
+# cache ... ENOENT". The leading "-" keeps the unit starting if the folder is
+# ever missing - the cache is then simply off, as before.
+ReadWritePaths=-/srv/cv/.next/cache
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
