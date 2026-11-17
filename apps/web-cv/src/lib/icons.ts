@@ -2,7 +2,7 @@ import {
   Award, BookOpen, Briefcase, Calendar, Camera, Cloud, Code2, Coffee, Contact,
   Cpu, Database, FileText, Globe, GraduationCap, Grid2x2, Heart, House,
   Languages, Layers, Lightbulb, Link2, Mail, MapPin,
-  MonitorSmartphone, PawPrint, Plane, Puzzle, Rocket, Server, Sparkles, Star,
+  MonitorSmartphone, PawPrint, Plane, Puzzle, Rocket, Server, ShieldCheck, Sparkles, Star,
   User, Users, Wrench, Zap,
   type LucideIcon,
 } from 'lucide-react';
@@ -22,7 +22,7 @@ export const ICONS = {
   languages: Languages, layers: Layers, lightbulb: Lightbulb,
   link: Link2, mail: Mail, mapPin: MapPin,
   devices: MonitorSmartphone, paw: PawPrint, plane: Plane, puzzle: Puzzle,
-  rocket: Rocket, server: Server, sparkles: Sparkles, star: Star,
+  rocket: Rocket, server: Server, shield: ShieldCheck, sparkles: Sparkles, star: Star,
   user: User, users: Users, wrench: Wrench, zap: Zap,
 } satisfies Record<string, LucideIcon>;
 

@@ -510,8 +510,56 @@
 
 .admin .inbox-tools .btn.danger:hover { background: rgba(255, 107, 94, 0.1); }
 
-/* ---------- settings: contact form limits ---------- */
+/* ---------- settings: tabs ---------- */
 
-.contact-limits-intro { margin-bottom: 1.1rem; }
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  /* on a phone the tabs scroll sideways rather than wrapping */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: var(--step--1);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 140ms ease, border-color 140ms ease;
+}
+
+.tab:hover { color: var(--ink); }
+
+.tab[aria-current='page'] {
+  border-bottom-color: var(--accent);
+  color: var(--ink);
+}
+
+.tab[aria-current='page'] svg { color: var(--accent); }
+
+/* phones: text-only tabs, so all four fit without scrolling */
+@media (max-width: 640px) {
+  .tab { padding: 0.65rem 0.6rem; }
+  .tab svg { display: none; }
+}
+
+.tab-intro { margin-bottom: 1.1rem; }
+
+.status-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.status-line .tag { flex: none; }
 .export-row { margin-top: 0.85rem; }
 form.editor-grid + .panel { margin-top: 1.25rem; }
