@@ -9,6 +9,7 @@ import { getDb } from '@/db/client';
 import { blocks, cvDocument, messages, pages, settings, users } from '@/db/schema';
 import { adminPath } from '@/lib/admin-path';
 import { authenticate, clearSessionCookie, requireUser, setSessionCookie } from '@/lib/auth';
+import { clientIp } from '@/lib/client-ip';
 import { isBlockType, type BlockType } from '@/lib/blocks';
 import { saveCvDocument } from '@/lib/cv';
 import { parseCvExport, parseCvForm } from '@/lib/cv-document';
@@ -23,14 +24,10 @@ const bool = (data: FormData, key: string): boolean => data.get(key) === 'on';
 const MIN_PASSWORD_LENGTH = 12;
 
 
-// Apache adds X-Forwarded-For on the way through, so this is the real client
-// rather than 127.0.0.1 for every single request.
-const clientKey = async (): Promise<string> => {
-  const list = await headers();
-  const forwarded = list.get('x-forwarded-for')?.split(',')[0]?.trim();
-
-  return forwarded || list.get('x-real-ip') || 'unknown';
-};
+// The client as our own proxies saw it. Reading the first X-Forwarded-For
+// entry (or X-Real-IP) let a caller send its own value and dodge the lockout
+// by changing it on every guess - see src/lib/client-ip.ts.
+const clientKey = async (): Promise<string> => clientIp(await headers());
 
 export const login = async (_: string | null, data: FormData): Promise<string | null> => {
   const key = await clientKey();
