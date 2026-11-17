@@ -29,13 +29,30 @@ const REENTRY_HEADER = 'x-admin-rewrite';
 const REENTRY_TOKEN = randomUUID();
 
 /**
+ * A rewrite target on this server itself. Next builds request.nextUrl with the
+ * scheme from X-Forwarded-Proto, so behind Apache on HTTPS it says `https:` -
+ * but the Node server only speaks plain HTTP. A rewrite whose origin differs
+ * from the server's own is treated as an external URL and proxied, so Next
+ * opened TLS to its own HTTP port and every admin request failed with EPROTO
+ * (500). The search string is kept; only the scheme and path change.
+ */
+const internalUrl = (request: NextRequest, pathname: string): URL => {
+  const url = request.nextUrl.clone();
+
+  url.protocol = 'http:';
+  url.pathname = pathname;
+
+  return url;
+};
+
+/**
  * A slug that cannot exist - `createPage` strips everything outside [a-z0-9-] -
  * so `[slug]` renders the site's own 404 page, with a real 404 status. Next
  * streams the rewrite target in the RSC payload, so the response is not quite
  * byte-identical to any other dead URL; what it never contains is ADMIN_PATH.
  */
 const notFound = (request: NextRequest): NextResponse =>
-  NextResponse.rewrite(new URL('/_missing', request.url));
+  NextResponse.rewrite(internalUrl(request, '/_missing'));
 
 export const proxy = (request: NextRequest): NextResponse => {
   const { pathname } = request.nextUrl;
@@ -71,10 +88,9 @@ export const proxy = (request: NextRequest): NextResponse => {
   }
 
   if (under(pathname, base)) {
-    const url = request.nextUrl.clone();
+    const url = internalUrl(request, `${INTERNAL_ADMIN_PATH}${pathname.slice(base.length)}`);
     const headers = new Headers(request.headers);
 
-    url.pathname = `${INTERNAL_ADMIN_PATH}${pathname.slice(base.length)}`;
     headers.set(REENTRY_HEADER, REENTRY_TOKEN);
 
     return NextResponse.rewrite(url, { request: { headers } });
