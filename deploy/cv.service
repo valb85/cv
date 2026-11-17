@@ -20,6 +20,9 @@ EnvironmentFile=/etc/cv.env
 ExecStart=/usr/bin/node /srv/cv/server.js
 Restart=always
 RestartSec=3
+# Node exits 143 on the SIGTERM that `systemctl stop/restart` sends. That is
+# a clean stop, not a failure - without this every restart logs "Failed".
+SuccessExitStatus=143
 
 # Creates and owns /var/lib/cv, which holds the database and uploads. Kept
 # outside /srv/cv so a redeploy overwrites the app without touching the data.
