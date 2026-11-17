@@ -24,5 +24,11 @@ services:
       DATABASE_PATH: "${DATABASE_PATH}"
       ENVIRONMENT: "${ENVIRONMENT}"
       SESSION_SECRET: "${SESSION_SECRET}"
+      # Proxies in front of Node whose X-Forwarded-For entries are trusted:
+      # Caddy + Apache in dev, see src/lib/client-ip.ts.
+      TRUSTED_PROXY_HOPS: "${TRUSTED_PROXY_HOPS:-1}"
+      # Contact form human check (Cloudflare Turnstile). Unset = off.
+      TURNSTILE_SITE_KEY: "${TURNSTILE_SITE_KEY:-}"
+      TURNSTILE_SECRET_KEY: "${TURNSTILE_SECRET_KEY:-}"
       UPLOAD_DIR: "${UPLOAD_DIR}"
       TZ: "Europe/Bucharest"

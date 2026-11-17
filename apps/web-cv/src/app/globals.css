@@ -763,6 +763,10 @@ p { margin: 0; }
 .field ::placeholder { color: var(--faint); }
 
 .contact-form .send { justify-content: center; width: 100%; margin-top: 0.4rem; }
+
+/* Cloudflare's widget is a fixed 300px iframe; keep its row from collapsing
+   while the script loads, so the button does not jump down. */
+.contact-form .turnstile { min-height: 65px; }
 .footnote { color: var(--faint); font-size: var(--step--2); text-align: center; }
 
 .honeypot {

@@ -102,8 +102,16 @@ Fill in, at minimum:
   malformed value takes the admin offline and logs why rather than quietly
   falling back to `/admin`
 - `ADMIN_PASSWORD` — used **once**, see step 6
+- `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` — the contact form's human
+  check. In the Cloudflare dashboard go to **Turnstile → Add widget**, enter
+  the domain, choose **Managed**, and copy both keys. No Cloudflare DNS or
+  proxy is needed, only a free account. If they're empty, the check is off,
+  the log says so once, and the form relies on its other spam layers only
+- `TRUSTED_PROXY_HOPS` — leave at `1` (Apache alone in front of Node). It
+  decides which `X-Forwarded-For` entry is the real client for the contact
+  rate limit and the login lockout
 
-The file holds a secret and a password in plaintext, hence `640`. Only root and
+The file holds secrets and a password in plaintext, hence `640`. Only root and
 the `cv` group can read it, and only systemd ever does.
 
 ## 4. The service

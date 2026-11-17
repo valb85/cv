@@ -10,6 +10,7 @@ import { ProjectGridBlock } from '@/components/blocks/ProjectGridBlock';
 import { QuoteBlock } from '@/components/blocks/QuoteBlock';
 import { SkillListBlock } from '@/components/blocks/SkillListBlock';
 import { TimelineBlock } from '@/components/blocks/TimelineBlock';
+import { issueFormToken, turnstileSiteKey } from '@/lib/contact-guard';
 import type { RenderableBlock } from '@/lib/queries';
 import { applyTokens, type Tokens } from '@/lib/tokens';
 
@@ -76,8 +77,14 @@ export const BlockRenderer = ({
       );
 
     case 'contact_form':
+      // Rendered on the server, so the token is signed here, per page view.
       return (
-        <ContactFormBlock data={block.data} initialStatus={contactSent ? 'sent' : 'idle'} />
+        <ContactFormBlock
+          data={block.data}
+          initialStatus={contactSent ? 'sent' : 'idle'}
+          formToken={issueFormToken()}
+          turnstileSiteKey={turnstileSiteKey()}
+        />
       );
   }
 };

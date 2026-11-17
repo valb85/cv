@@ -1,6 +1,8 @@
 import { getDb } from '@/db/client';
 import { messages } from '@/db/schema';
+import { clientIp } from '@/lib/client-ip';
 import { validateContact } from '@/lib/contact';
+import { checkFormToken, countLinks, isRateLimited, MAX_LINKS, verifyTurnstile } from '@/lib/contact-guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +29,10 @@ const respond = (request: Request, ok: boolean, error?: string): Response => {
  * Submissions are stored and read in the admin inbox only - nothing is
  * relayed by e-mail. There is no delivery step to fail, so a stored row is
  * the whole success condition.
+ *
+ * The spam checks run cheapest first, so the network call to Cloudflare only
+ * happens for a submission that passed everything local. See
+ * src/lib/contact-guard.ts for what each layer stops.
  */
 export async function POST(request: Request): Promise<Response> {
   let data: FormData;
@@ -49,8 +55,39 @@ export async function POST(request: Request): Promise<Response> {
     return result.error === 'spam' ? respond(request, true) : respond(request, false, result.error);
   }
 
+  switch (checkFormToken(field(data, 'form_token'))) {
+    case 'ok':
+      break;
+    case 'too-fast':
+      return respond(request, false, 'That was quick - please check your message and send it again.');
+    case 'expired':
+      return respond(request, false, 'This form has been open too long. Reload the page and send again.');
+    case 'invalid':
+      return respond(request, false, 'Please send your message from the contact page.');
+  }
+
+  const ip = clientIp(request.headers);
+
+  if (isRateLimited(ip)) {
+    return respond(request, false, 'Too many messages from your network. Please try again later.');
+  }
+
+  if (countLinks(result.value.name, result.value.body) > MAX_LINKS) {
+    return respond(request, false, `Please include at most ${MAX_LINKS} links in your message.`);
+  }
+
+  switch (await verifyTurnstile(field(data, 'cf-turnstile-response'), ip)) {
+    case 'ok':
+    case 'disabled':
+      break;
+    case 'missing':
+    case 'failed':
+      return respond(request, false, 'Please complete the human check and send again.');
+    case 'unavailable':
+      return respond(request, false, 'The human check could not be verified right now. Please try again.');
+  }
+
   const subject = field(data, 'subject').trim();
-  const headers = request.headers;
 
   getDb()
     .insert(messages)
@@ -58,8 +95,8 @@ export async function POST(request: Request): Promise<Response> {
       name: result.value.name,
       email: result.value.email,
       body: subject ? `[${subject}]\n\n${result.value.body}` : result.value.body,
-      ip: headers.get('x-real-ip') ?? headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
-      userAgent: headers.get('user-agent'),
+      ip,
+      userAgent: request.headers.get('user-agent'),
     })
     .run();
 

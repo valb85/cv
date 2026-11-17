@@ -5,19 +5,28 @@ import { useState, type FormEvent } from 'react';
 import type { BlockDataMap } from '@/lib/blocks';
 import { LIMITS } from '@/lib/contact';
 import { Icon } from '@/components/Icon';
+import { Turnstile } from '@/components/Turnstile';
 
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
 export const ContactFormBlock = ({
   data,
   initialStatus = 'idle',
+  formToken,
+  turnstileSiteKey,
 }: {
   data: BlockDataMap['contact_form'];
   // Set from ?contact=sent so the no-JS redirect still confirms.
   initialStatus?: Status;
+  /** Signed on the server per page view; see src/lib/contact-guard.ts. */
+  formToken: string;
+  /** Null when Turnstile is not configured - the widget is then left out. */
+  turnstileSiteKey: string | null;
 }) => {
   const [status, setStatus] = useState<Status>(initialStatus);
   const [error, setError] = useState<string | null>(null);
+  // Turnstile tokens are single-use; a failed send needs a fresh one.
+  const [attempts, setAttempts] = useState(0);
 
   // Enhances the plain form; without JS it posts normally and the endpoint
   // redirects back with ?contact=sent.
@@ -48,6 +57,8 @@ export const ContactFormBlock = ({
       setError('Could not reach the server.');
       setStatus('error');
     }
+
+    setAttempts((n) => n + 1);
   };
 
   if (status === 'sent') {
@@ -99,6 +110,8 @@ export const ContactFormBlock = ({
           aria-hidden="true"
           className="honeypot"
         />
+        <input type="hidden" name="form_token" value={formToken} />
+        {turnstileSiteKey ? <Turnstile siteKey={turnstileSiteKey} resetSignal={attempts} /> : null}
         {error ? <p className="error">{error}</p> : null}
         <button type="submit" className="btn btn-primary send" disabled={status === 'sending'}>
           {status === 'sending' ? 'Sending...' : 'Send Message'}
